@@ -4,23 +4,45 @@ import os
 
 st.title("# Gestión de Rutas Guardadas")
 
-FILE = "rutas_guardadas.csv"
+RUTA_RUTAS = "rutas_guardadas.csv"
+RUTA_DATOS = "datos_generales.csv"
 
-if os.path.exists(FILE):
-    df = pd.read_csv(FILE)
-else:
-    st.warning("No hay rutas guardadas todavía.")
-    df = pd.DataFrame()
+def cargar_datos_generales():
+    if os.path.exists(RUTA_DATOS):
+        return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
+    return {}
 
-if not df.empty:
-    st.dataframe(df)
+if os.path.exists(RUTA_RUTAS):
+    df = pd.read_csv(RUTA_RUTAS)
+    datos_generales = cargar_datos_generales()
 
-    to_delete = st.multiselect("Selecciona las rutas que deseas eliminar (por índice):", df.index.tolist())
-    if st.button("Eliminar rutas seleccionadas") and to_delete:
-        df.drop(index=to_delete, inplace=True)
-        df.to_csv(FILE, index=False)
-        st.success("Rutas eliminadas correctamente.")
+    # Obtener tipo de cambio y diesel
+    tipo_cambio_usd = float(datos_generales.get("Tipo de cambio USD", 17.5))
+    tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
+    precio_diesel = float(datos_generales.get("Costo Diesel", 24))
+
+    # Agregar columna: Tipo de cambio aplicado
+    df["Tipo_Cambio"] = df["Moneda"].apply(lambda x: tipo_cambio_usd if x == "USD" else tipo_cambio_mxn)
+
+    # Insertar columnas visuales
+    df.insert(df.columns.get_loc("Costo_Diesel"), "Precio_Diesel", precio_diesel)
+    moneda_col = df.pop("Moneda")
+    df.insert(df.columns.get_loc("Destino") + 1, "Moneda", moneda_col)
+    tipo_cambio_col = df.pop("Tipo_Cambio")
+    df.insert(df.columns.get_loc("Moneda") + 1, "Tipo_Cambio", tipo_cambio_col)
+
+    # Mostrar tabla
+    st.dataframe(df, use_container_width=True)
+
+    st.subheader("Selecciona las rutas que deseas eliminar (por índice):")
+    indices = st.multiselect("Índices a eliminar", df.index.tolist())
+
+    if st.button("Eliminar rutas seleccionadas") and indices:
+        df.drop(index=indices, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df.to_csv(RUTA_RUTAS, index=False)
+        st.success("✅ Rutas eliminadas correctamente.")
         st.rerun()
 
-    st.write("Puedes editar los datos directamente en Excel y volver a subirlos si lo deseas.")
-    st.download_button("Descargar rutas en Excel", df.to_csv(index=False), file_name="rutas_guardadas.csv")
+else:
+    st.warning("No hay rutas guardadas aún.")
