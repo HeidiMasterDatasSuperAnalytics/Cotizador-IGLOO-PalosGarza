@@ -95,13 +95,29 @@ if os.path.exists(RUTA_RUTAS):
         costo_total = costo_diesel + casetas + costos_extra + cruce_total
 
         if st.button("Guardar cambios en la ruta"):
-            df.loc[indice_editar] = [
-                tipo, cliente, origen, destino, km, horas_termo, casetas,
-                lavado, mov_local, puntualidad, pension, estancia,
-                fianza, renta, moneda, ingreso_original, ingreso_total,
-                moneda_cruce, cruce_original, cruce_total,
-                costo_diesel, costo_total
-            ]
+            df.loc[indice_editar, "Tipo"] = tipo
+            df.loc[indice_editar, "Cliente"] = cliente
+            df.loc[indice_editar, "Origen"] = origen
+            df.loc[indice_editar, "Destino"] = destino
+            df.loc[indice_editar, "KM"] = km
+            df.loc[indice_editar, "Horas_Termo"] = horas_termo
+            df.loc[indice_editar, "Casetas"] = casetas
+            df.loc[indice_editar, "Lavado_Termo"] = lavado
+            df.loc[indice_editar, "Movimiento_Local"] = mov_local
+            df.loc[indice_editar, "Puntualidad"] = puntualidad
+            df.loc[indice_editar, "Pension"] = pension
+            df.loc[indice_editar, "Estancia"] = estancia
+            df.loc[indice_editar, "Fianza_Termo"] = fianza
+            df.loc[indice_editar, "Renta_Termo"] = renta
+            df.loc[indice_editar, "Moneda"] = moneda
+            df.loc[indice_editar, "Ingreso_Original"] = ingreso_original
+            df.loc[indice_editar, "Ingreso_Total"] = ingreso_total
+            df.loc[indice_editar, "Moneda_Cruce"] = moneda_cruce
+            df.loc[indice_editar, "Cruce_Original"] = cruce_original
+            df.loc[indice_editar, "Cruce_Total"] = cruce_total
+            df.loc[indice_editar, "Costo_Diesel"] = costo_diesel
+            df.loc[indice_editar, "Costo_Total"] = costo_total
+
             df.to_csv(RUTA_RUTAS, index=False)
             st.success("✅ Ruta actualizada correctamente.")
             st.rerun()
