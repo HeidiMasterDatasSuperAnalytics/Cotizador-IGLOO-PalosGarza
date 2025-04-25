@@ -13,7 +13,9 @@ valores_por_defecto = {
     "Bono ISR IMSS": 462.66,
     "Pago x km IMPO": 2.10,
     "Pago x km EXPO": 2.50,
-    "Pago fijo VACIO": 200.00
+    "Pago fijo VACIO": 200.00,
+    "Tipo de cambio USD": 17.5,
+    "Tipo de cambio MXN": 1.0
 }
 
 def load_defaults():
@@ -36,4 +38,5 @@ for key in valores_por_defecto:
 if st.button("Guardar Datos Generales"):
     save_defaults(valores)
     st.success("Datos guardados correctamente.")
+
 
