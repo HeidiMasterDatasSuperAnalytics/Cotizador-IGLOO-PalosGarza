@@ -29,7 +29,19 @@ def calcular_costos(ruta, datos):
     else:  # VACIO
         sueldo = float(datos.get("Pago fijo VACIO", 200))
 
-    return costo_diesel, sueldo
+    # Costos adicionales
+    extras = ruta.get("Casetas", 0) + sum([
+        ruta.get("Lavado_Termo", 0),
+        ruta.get("Movimiento_Local", 0),
+        ruta.get("Puntualidad", 0),
+        ruta.get("Pension", 0),
+        ruta.get("Estancia", 0),
+        ruta.get("Fianza_Termo", 0),
+        ruta.get("Renta_Termo", 0)
+    ])
+
+    costo_total = costo_diesel + sueldo + extras
+    return costo_diesel, sueldo, extras, costo_total
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
@@ -59,26 +71,31 @@ if os.path.exists(RUTA_RUTAS):
         ingreso_total = 0
         diesel_total = 0
         sueldo_total = 0
+        extras_total = 0
+        costo_total_general = 0
 
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel, sueldo = calcular_costos(ruta, datos)
-            total = costo_diesel + sueldo
+            costo_diesel, sueldo, extras, total_ruta = calcular_costos(ruta, datos)
             ingreso_total += ruta["Ingreso_Total"]
             diesel_total += costo_diesel
             sueldo_total += sueldo
+            extras_total += extras
+            costo_total_general += total_ruta
 
             st.markdown(f"""
             **{ruta['Tipo']} — {ruta['Origen']} → {ruta['Destino']}**
-            - Ingreso: ${ruta['Ingreso_Total']:,.2f}
+            - Moneda: {ruta.get('Moneda', 'MXN')}
+            - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
+            - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
             - Diesel: ${costo_diesel:,.2f}
             - Sueldo operador: ${sueldo:,.2f}
-            - **Costo Total Ruta:** ${total:,.2f}
+            - Casetas y Extras: ${extras:,.2f}
+            - **Costo Total Ruta:** ${total_ruta:,.2f}
             """)
 
-        costo_total = diesel_total + sueldo_total
-        utilidad = ingreso_total - costo_total
+        utilidad = ingreso_total - costo_total_general
         rentabilidad = (utilidad / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.subheader("📊 Resultado General")
