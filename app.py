@@ -1,31 +1,21 @@
 import streamlit as st
+from PIL import Image
+import os
 
-st.markdown("""
-    <style>
-    .logo-img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 300px;
-    }
+# Cargar imágenes locales
+logo_claro = Image.open("Igloo Original.png")
+logo_oscuro = Image.open("Igloo White.png")
 
-    @media (prefers-color-scheme: dark) {
-        .logo-light { display: none; }
-        .logo-dark { display: block; }
-    }
+# Detectar si el tema es oscuro o claro usando CSS preferencia de sistema
+theme = st.get_option("theme.base")
 
-    @media (prefers-color-scheme: light) {
-        .logo-light { display: block; }
-        .logo-dark { display: none; }
-    }
-    </style>
+# Mostrar el logo correcto
+if theme == "dark":
+    st.image(logo_oscuro, width=300)
+else:
+    st.image(logo_claro, width=300)
 
-    <div>
-        <img src="Igloo Original.png" class="logo-img logo-light">
-        <img src="Igloo White.png" class="logo-img logo-dark">
-    </div>
-""", unsafe_allow_html=True)
-
+# Texto de bienvenida
 st.markdown("""
 # Bienvenido al Cotizador de Rutas 🚛📊
 
