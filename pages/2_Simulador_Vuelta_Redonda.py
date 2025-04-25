@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.title("# Simulador de Vuelta Redonda")
+st.title("Simulador de Vuelta Redonda")
 
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
