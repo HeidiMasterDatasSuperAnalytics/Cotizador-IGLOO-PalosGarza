@@ -25,6 +25,7 @@ if os.path.exists(RUTA_RUTAS):
     df["Tipo_Cambio_Cruce"] = df["Moneda_Cruce"].apply(lambda x: tipo_cambio_usd if x == "USD" else tipo_cambio_mxn)
 
     # Insertar columnas para vista
+    if "Precio_Diesel" not in df.columns:
     df.insert(df.columns.get_loc("Costo_Diesel"), "Precio_Diesel", precio_diesel)
 
     # Reubicar columnas de moneda
@@ -95,7 +96,7 @@ if os.path.exists(RUTA_RUTAS):
         costo_total = costo_diesel + casetas + costos_extra + cruce_total
 
         if st.button("Guardar cambios en la ruta"):
-            df.at[indice_editar, :] = [
+            df.loc[indice_editar, :] = [
                 tipo, cliente, origen, destino, km, horas_termo, casetas,
                 lavado, mov_local, puntualidad, pension, estancia,
                 fianza, renta, moneda, ingreso_original, ingreso_total,
