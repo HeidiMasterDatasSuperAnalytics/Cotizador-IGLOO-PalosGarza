@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.title("# Gestión de Rutas Guardadas")
+st.title("Gestión de Rutas Guardadas")
 
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
