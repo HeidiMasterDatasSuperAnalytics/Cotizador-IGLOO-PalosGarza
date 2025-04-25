@@ -30,11 +30,14 @@ def calcular_costos(ruta, datos):
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
     elif tipo == "EXPO":
         sueldo = km * float(datos.get("Pago x km EXPO", 2.5))
-    else:
+    else:  # VACIO
         sueldo = float(datos.get("Pago fijo VACIO", 200))
 
-    # Bono ISR IMSS
-    bono_isr_imss = ruta.get("Bono_ISR_IMSS", 0)
+    # Bono ISR IMSS (solo IMPO y EXPO)
+    if tipo in ["IMPO", "EXPO"]:
+        bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
+    else:
+        bono_isr_imss = 0
 
     # Costos adicionales
     casetas = ruta.get("Casetas", 0)
@@ -50,7 +53,7 @@ def calcular_costos(ruta, datos):
 
     cruce = ruta.get("Cruce_Total", 0)
 
-    # Costo total de ruta
+    # Costo total
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono_isr_imss + casetas + extras + cruce
 
     return costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, costo_total
