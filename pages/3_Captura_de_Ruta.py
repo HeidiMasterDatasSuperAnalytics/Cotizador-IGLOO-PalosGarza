@@ -15,7 +15,12 @@ def load_datos_generales():
 if os.path.exists(FILE):
     df = pd.read_csv(FILE)
 else:
-    df = pd.DataFrame(columns=["Tipo", "Cliente", "Origen", "Destino", "KM", "Horas_Termo", "Ingreso_Total", "Costo_Diesel", "Costo_Total"])
+    df = pd.DataFrame(columns=[
+        "Tipo", "Cliente", "Origen", "Destino", "KM", "Horas_Termo", "Casetas",
+        "Lavado_Termo", "Movimiento_Local", "Puntualidad", "Pension", "Estancia",
+        "Fianza_Termo", "Renta_Termo", "Moneda", "Ingreso_Original", "Ingreso_Total",
+        "Costo_Diesel", "Costo_Total"
+    ])
 
 datos = load_datos_generales()
 
@@ -27,14 +32,40 @@ origen = st.text_input("Origen")
 destino = st.text_input("Destino")
 km = st.number_input("Kilómetros recorridos", min_value=0.0)
 horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
-ingreso_total = st.number_input("Ingreso Total Estimado (MXN)", min_value=0.0)
+casetas = st.number_input("Costo de Casetas (MXN)", min_value=0.0)
+
+# Moneda e ingreso
+moneda = st.selectbox("Moneda del ingreso", ["MXN", "USD"])
+ingreso_original = st.number_input(f"Ingreso en {moneda}", min_value=0.0)
+
+# Conversión
+tipo_cambio = float(datos.get(f"Tipo de cambio {moneda}", 1.0))
+ingreso_total = ingreso_original * tipo_cambio
+
+# Campos opcionales
+lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=0.0)
+mov_local = st.number_input("Movimiento Local", min_value=0.0, value=0.0)
+puntualidad = st.number_input("Puntualidad", min_value=0.0, value=0.0)
+pension = st.number_input("Pensión", min_value=0.0, value=0.0)
+estancia = st.number_input("Estancia", min_value=0.0, value=0.0)
+fianza = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0, value=0.0)
+renta_termo = st.number_input("Renta de Termo", min_value=0.0, value=0.0)
 
 # Cálculo de diesel
 rendimiento = float(datos.get("Rendimiento Camion", 2.5))
 diesel = float(datos.get("Costo Diesel", 24))
 costo_diesel = (km / rendimiento) * diesel if rendimiento > 0 else 0
 
+# Costo total
+costos_extra = sum([lavado_termo, mov_local, puntualidad, pension, estancia, fianza, renta_termo])
+costo_total = costo_diesel + casetas + costos_extra
+
+# Mostrar desglose
+st.write(f"**Ingreso Convertido (MXN):** ${ingreso_total:,.2f}")
 st.write(f"**Costo Diesel Estimado:** ${costo_diesel:,.2f}")
+st.write(f"**Casetas:** ${casetas:,.2f}")
+st.write(f"**Costos Extra (opcionales):** ${costos_extra:,.2f}")
+st.write(f"**Costo Total Calculado:** ${costo_total:,.2f}")
 
 if st.button("Guardar Ruta"):
     nueva_ruta = pd.DataFrame([{
@@ -44,9 +75,19 @@ if st.button("Guardar Ruta"):
         "Destino": destino,
         "KM": km,
         "Horas_Termo": horas_termo,
+        "Casetas": casetas,
+        "Lavado_Termo": lavado_termo,
+        "Movimiento_Local": mov_local,
+        "Puntualidad": puntualidad,
+        "Pension": pension,
+        "Estancia": estancia,
+        "Fianza_Termo": fianza,
+        "Renta_Termo": renta_termo,
+        "Moneda": moneda,
+        "Ingreso_Original": ingreso_original,
         "Ingreso_Total": ingreso_total,
         "Costo_Diesel": costo_diesel,
-        "Costo_Total": costo_diesel  # Sueldo operador se calculará en el simulador
+        "Costo_Total": costo_total
     }])
     df = pd.concat([df, nueva_ruta], ignore_index=True)
     df.to_csv(FILE, index=False)
