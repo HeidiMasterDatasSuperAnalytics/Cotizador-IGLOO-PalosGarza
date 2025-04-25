@@ -45,4 +45,45 @@ if os.path.exists(RUTA_RUTAS):
     expo_sel = st.selectbox("Ruta de Exportación", expo_rutas.index.tolist(), format_func=lambda x: f"{expo_rutas.loc[x, 'Origen']} → {expo_rutas.loc[x, 'Destino']}")
     usar_vacio = st.checkbox("¿Agregar ruta VACÍA entre IMPO y EXPO?")
 
-    if usar_vacio_
+    if usar_vacio and not vacio_rutas.empty:
+        vacio_sel = st.selectbox("Ruta VACÍA (opcional)", vacio_rutas.index.tolist(), format_func=lambda x: f"{vacio_rutas.loc[x, 'Origen']} → {vacio_rutas.loc[x, 'Destino']}")
+    else:
+        vacio_sel = None
+
+    if st.button("Simular Vuelta Redonda"):
+        rutas = [impo_rutas.loc[impo_sel]]
+        if vacio_sel is not None:
+            rutas.append(vacio_rutas.loc[vacio_sel])
+        rutas.append(expo_rutas.loc[expo_sel])
+
+        ingreso_total = 0
+        diesel_total = 0
+        sueldo_total = 0
+
+        st.subheader("🧾 Detalle por Ruta")
+
+        for ruta in rutas:
+            costo_diesel, sueldo = calcular_costos(ruta, datos)
+            total = costo_diesel + sueldo
+            ingreso_total += ruta["Ingreso_Total"]
+            diesel_total += costo_diesel
+            sueldo_total += sueldo
+
+            st.markdown(f"""
+            **{ruta['Tipo']} — {ruta['Origen']} → {ruta['Destino']}**
+            - Ingreso: ${ruta['Ingreso_Total']:,.2f}
+            - Diesel: ${costo_diesel:,.2f}
+            - Sueldo operador: ${sueldo:,.2f}
+            - **Costo Total Ruta:** ${total:,.2f}
+            """)
+
+        costo_total = diesel_total + sueldo_total
+        utilidad = ingreso_total - costo_total
+        rentabilidad = (utilidad / ingreso_total * 100) if ingreso_total > 0 else 0
+
+        st.subheader("📊 Resultado General")
+        st.success(f"Utilidad total: ${utilidad:,.2f}")
+        st.info(f"Rentabilidad total: {rentabilidad:.2f}%")
+
+else:
+    st.warning("No hay rutas guardadas todavía para simular.")
