@@ -3,31 +3,49 @@ import pandas as pd
 import os
 
 # 🔵 LOGO en la esquina superior derecha
-st.markdown("""
+from PIL import Image
+import base64
+from io import BytesIO
+
+# Función para convertir imagen en base64
+def image_to_base64(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode()
+
+# Cargar imágenes
+logo_claro = Image.open("Igloo Original.png")
+logo_oscuro = Image.open("Igloo White.png")
+
+# Convertir a base64
+logo_claro_b64 = image_to_base64(logo_claro)
+logo_oscuro_b64 = image_to_base64(logo_oscuro)
+
+# Mostrar como HTML en la parte superior derecha
+st.markdown(f"""
     <style>
-    .logo-container {
+    .logo-container {{
         position: absolute;
         top: 10px;
         right: 20px;
         z-index: 9999;
-    }
-    .logo-container img {
+    }}
+    .logo-img {{
         height: 40px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .logo-light { display: none; }
-        .logo-dark { display: inline; }
-    }
-    @media (prefers-color-scheme: light) {
-        .logo-light { display: inline; }
-        .logo-dark { display: none; }
-    }
+    }}
+    @media (prefers-color-scheme: dark) {{
+        .logo-light {{ display: none; }}
+        .logo-dark {{ display: inline; }}
+    }}
+    @media (prefers-color-scheme: light) {{
+        .logo-light {{ display: inline; }}
+        .logo-dark {{ display: none; }}
+    }}
     </style>
 
     <div class="logo-container">
-        <img src="Igloo Original.png" class="logo-light">
-        <img src="Igloo White.png" class="logo-dark">
+        <img src="data:image/png;base64,{logo_claro_b64}" class="logo-img logo-light">
+        <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-img logo-dark">
     </div>
 """, unsafe_allow_html=True)
 
