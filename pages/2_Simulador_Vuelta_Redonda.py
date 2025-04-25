@@ -15,15 +15,15 @@ def load_datos_generales():
 def calcular_costos(ruta, datos):
     tipo = ruta["Tipo"]
     km = ruta["KM"]
+    horas_termo = ruta.get("Horas_Termo", 0)
     diesel = float(datos.get("Costo Diesel", 24))
     rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
-    rendimiento_termo = float(datos.get("Horas de uso del Termo", 3))
 
-    # Costo Diesel Camión
+    # Costo Diesel Camión (por km)
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
 
-    # Costo Diesel Termo
-    costo_diesel_termo = (km / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
+    # Costo Diesel Termo (por horas de uso)
+    costo_diesel_termo = horas_termo * diesel
 
     # Sueldo operador
     if tipo == "IMPO":
@@ -33,7 +33,7 @@ def calcular_costos(ruta, datos):
     else:
         sueldo = float(datos.get("Pago fijo VACIO", 200))
 
-    # Costos
+    # Costos adicionales
     casetas = ruta.get("Casetas", 0)
     extras = sum([
         ruta.get("Lavado_Termo", 0),
@@ -45,10 +45,9 @@ def calcular_costos(ruta, datos):
         ruta.get("Renta_Termo", 0)
     ])
 
-    # Costo de cruce
     cruce = ruta.get("Cruce_Total", 0)
 
-    # Costo total
+    # Costo total de ruta
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + casetas + extras + cruce
 
     return costo_diesel_camion, costo_diesel_termo, sueldo, casetas, extras, cruce, costo_total
