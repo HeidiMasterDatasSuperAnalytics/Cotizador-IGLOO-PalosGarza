@@ -40,8 +40,11 @@ def calcular_costos(ruta, datos):
         ruta.get("Renta_Termo", 0)
     ])
 
-    costo_total = costo_diesel + sueldo + extras
-    return costo_diesel, sueldo, extras, costo_total
+    # Costo de cruce (ya viene convertido)
+    cruce = ruta.get("Cruce_Total", 0)
+
+    costo_total = costo_diesel + sueldo + extras + cruce
+    return costo_diesel, sueldo, extras, cruce, costo_total
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
@@ -72,16 +75,18 @@ if os.path.exists(RUTA_RUTAS):
         diesel_total = 0
         sueldo_total = 0
         extras_total = 0
+        cruce_total = 0
         costo_total_general = 0
 
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel, sueldo, extras, total_ruta = calcular_costos(ruta, datos)
+            costo_diesel, sueldo, extras, cruce, total_ruta = calcular_costos(ruta, datos)
             ingreso_total += ruta["Ingreso_Total"]
             diesel_total += costo_diesel
             sueldo_total += sueldo
             extras_total += extras
+            cruce_total += cruce
             costo_total_general += total_ruta
 
             st.markdown(f"""
@@ -90,6 +95,7 @@ if os.path.exists(RUTA_RUTAS):
             - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
             - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
             - Diesel: ${costo_diesel:,.2f}
+            - Cruce: ${cruce:,.2f}
             - Sueldo operador: ${sueldo:,.2f}
             - Casetas y Extras: ${extras:,.2f}
             - **Costo Total Ruta:** ${total_ruta:,.2f}
