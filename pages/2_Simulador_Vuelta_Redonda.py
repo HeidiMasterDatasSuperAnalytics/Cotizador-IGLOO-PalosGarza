@@ -23,17 +23,17 @@ def calcular_costos(ruta, datos):
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
 
     # Costo Diesel Termo
-    costo_diesel_termo = horas_termo * 3 * diesel
+    costo_diesel_termo = horas_termo * diesel
 
     # Sueldo operador
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
     elif tipo == "EXPO":
         sueldo = km * float(datos.get("Pago x km EXPO", 2.5))
-    else:  # VACIO
+    else:
         sueldo = float(datos.get("Pago fijo VACIO", 200))
 
-    # Bono ISR IMSS (solo IMPO y EXPO)
+    # Bono ISR IMSS (solo para IMPO y EXPO)
     if tipo in ["IMPO", "EXPO"]:
         bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
     else:
@@ -53,7 +53,6 @@ def calcular_costos(ruta, datos):
 
     cruce = ruta.get("Cruce_Total", 0)
 
-    # Costo total
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono_isr_imss + casetas + extras + cruce
 
     return costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, costo_total
@@ -83,7 +82,7 @@ if os.path.exists(RUTA_RUTAS):
             rutas.append(vacio_rutas.loc[vacio_sel])
         rutas.append(expo_rutas.loc[expo_sel])
 
-               km_total = 0
+        km_total = 0
         ingreso_total = 0
         diesel_camion_total = 0
         diesel_termo_total = 0
@@ -147,6 +146,6 @@ if os.path.exists(RUTA_RUTAS):
         st.write(f"**Total Extras:** ${extras_total:,.2f}")
         st.write(f"**Total Cruces:** ${cruce_total:,.2f}")
 
-
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
+
