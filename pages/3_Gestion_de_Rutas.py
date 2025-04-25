@@ -20,29 +20,22 @@ if os.path.exists(RUTA_RUTAS):
     tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
     precio_diesel = float(datos_generales.get("Costo Diesel", 24))
 
-    # Calcular tipo de cambio aplicado
-    df["Tipo_Cambio"] = df["Moneda"].apply(lambda x: tipo_cambio_usd if x == "USD" else tipo_cambio_mxn)
-    df["Tipo_Cambio_Cruce"] = df["Moneda_Cruce"].apply(lambda x: tipo_cambio_usd if x == "USD" else tipo_cambio_mxn)
-
-    # Insertar columna de precio si no existe
+    # Insertar precio diesel si no existe
     if "Precio_Diesel" not in df.columns:
         df.insert(df.columns.get_loc("Costo_Diesel"), "Precio_Diesel", precio_diesel)
 
-    # Reubicar columnas
-    moneda = df.pop("Moneda")
-    tipo_cambio = df.pop("Tipo_Cambio")
-    df.insert(df.columns.get_loc("Destino") + 1, "Moneda", moneda)
-    df.insert(df.columns.get_loc("Moneda") + 1, "Tipo_Cambio", tipo_cambio)
+    # Asegurarse de tener las columnas bien organizadas
+    columnas_ordenadas = [
+        "Tipo", "Cliente", "Origen", "Destino", "KM",
+        "Moneda", "Ingreso_Original", "Ingreso_Total",
+        "Moneda_Cruce", "Cruce_Original", "Cruce_Total",
+        "Casetas", "Horas_Termo", "Lavado_Termo", "Movimiento_Local",
+        "Puntualidad", "Pension", "Estancia", "Fianza_Termo", "Renta_Termo",
+        "Precio_Diesel", "Costo_Diesel", "Costo_Total"
+    ]
+    df = df[columnas_ordenadas]
 
-    moneda_cruce = df.pop("Moneda_Cruce")
-    tipo_cambio_cruce = df.pop("Tipo_Cambio_Cruce")
-    cruce_original = df.pop("Cruce_Original")
-    cruce_total = df.pop("Cruce_Total")
-    df.insert(df.columns.get_loc("Ingreso_Total") + 1, "Moneda_Cruce", moneda_cruce)
-    df.insert(df.columns.get_loc("Moneda_Cruce") + 1, "Tipo_Cambio_Cruce", tipo_cambio_cruce)
-    df.insert(df.columns.get_loc("Tipo_Cambio_Cruce") + 1, "Cruce_Original", cruce_original)
-    df.insert(df.columns.get_loc("Cruce_Original") + 1, "Cruce_Total", cruce_total)
-
+    # Mostrar tabla ordenada
     st.dataframe(df, use_container_width=True)
 
     # 🔴 Eliminar rutas
@@ -68,30 +61,33 @@ if os.path.exists(RUTA_RUTAS):
         cliente = st.text_input("Cliente", value=ruta["Cliente"])
         origen = st.text_input("Origen", value=ruta["Origen"])
         destino = st.text_input("Destino", value=ruta["Destino"])
-        km = st.number_input("Kilómetros", min_value=0.0, value=ruta["KM"])
-        horas_termo = st.number_input("Horas Termo", min_value=0.0, value=ruta["Horas_Termo"])
-        casetas = st.number_input("Casetas", min_value=0.0, value=ruta["Casetas"])
-        lavado = st.number_input("Lavado Termo", min_value=0.0, value=ruta["Lavado_Termo"])
+        km = st.number_input("Kilómetros recorridos", min_value=0.0, value=ruta["KM"])
+
+        # Ingreso Flete
+        moneda = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda"]))
+        ingreso_original = st.number_input(f"Ingreso Flete en {moneda}", min_value=0.0, value=ruta["Ingreso_Original"])
+        tipo_cambio_ing = tipo_cambio_usd if moneda == "USD" else tipo_cambio_mxn
+        ingreso_total = ingreso_original * tipo_cambio_ing
+
+        # Ingreso Cruce
+        moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda_Cruce"]))
+        cruce_original = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0, value=ruta["Cruce_Original"])
+        tipo_cambio_cruce = tipo_cambio_usd if moneda_cruce == "USD" else tipo_cambio_mxn
+        cruce_total = cruce_original * tipo_cambio_cruce
+
+        casetas = st.number_input("Costo de Casetas", min_value=0.0, value=ruta["Casetas"])
+        horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0, value=ruta["Horas_Termo"])
+        lavado_termo = st.number_input("Lavado de Termo", min_value=0.0, value=ruta["Lavado_Termo"])
         mov_local = st.number_input("Movimiento Local", min_value=0.0, value=ruta["Movimiento_Local"])
         puntualidad = st.number_input("Puntualidad", min_value=0.0, value=ruta["Puntualidad"])
         pension = st.number_input("Pensión", min_value=0.0, value=ruta["Pension"])
         estancia = st.number_input("Estancia", min_value=0.0, value=ruta["Estancia"])
-        fianza = st.number_input("Fianza Termo", min_value=0.0, value=ruta["Fianza_Termo"])
-        renta = st.number_input("Renta Termo", min_value=0.0, value=ruta["Renta_Termo"])
-
-        moneda = st.selectbox("Moneda del ingreso", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda"]))
-        ingreso_original = st.number_input(f"Ingreso en {moneda}", min_value=0.0, value=ruta["Ingreso_Original"])
-        tipo_cambio_ing = tipo_cambio_usd if moneda == "USD" else tipo_cambio_mxn
-        ingreso_total = ingreso_original * tipo_cambio_ing
-
-        moneda_cruce = st.selectbox("Moneda del cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda_Cruce"]))
-        cruce_original = st.number_input(f"Costo de Cruce en {moneda_cruce}", min_value=0.0, value=ruta["Cruce_Original"])
-        tipo_cambio_cruce = tipo_cambio_usd if moneda_cruce == "USD" else tipo_cambio_mxn
-        cruce_total = cruce_original * tipo_cambio_cruce
+        fianza = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0, value=ruta["Fianza_Termo"])
+        renta_termo = st.number_input("Renta de Termo", min_value=0.0, value=ruta["Renta_Termo"])
 
         rendimiento = float(datos_generales.get("Rendimiento Camion", 2.5))
         costo_diesel = (km / rendimiento) * precio_diesel if rendimiento > 0 else 0
-        costos_extra = sum([lavado, mov_local, puntualidad, pension, estancia, fianza, renta])
+        costos_extra = sum([lavado_termo, mov_local, puntualidad, pension, estancia, fianza, renta_termo])
         costo_total = costo_diesel + casetas + costos_extra + cruce_total
 
         if st.button("Guardar cambios en la ruta"):
@@ -100,21 +96,21 @@ if os.path.exists(RUTA_RUTAS):
             df.loc[indice_editar, "Origen"] = origen
             df.loc[indice_editar, "Destino"] = destino
             df.loc[indice_editar, "KM"] = km
-            df.loc[indice_editar, "Horas_Termo"] = horas_termo
-            df.loc[indice_editar, "Casetas"] = casetas
-            df.loc[indice_editar, "Lavado_Termo"] = lavado
-            df.loc[indice_editar, "Movimiento_Local"] = mov_local
-            df.loc[indice_editar, "Puntualidad"] = puntualidad
-            df.loc[indice_editar, "Pension"] = pension
-            df.loc[indice_editar, "Estancia"] = estancia
-            df.loc[indice_editar, "Fianza_Termo"] = fianza
-            df.loc[indice_editar, "Renta_Termo"] = renta
             df.loc[indice_editar, "Moneda"] = moneda
             df.loc[indice_editar, "Ingreso_Original"] = ingreso_original
             df.loc[indice_editar, "Ingreso_Total"] = ingreso_total
             df.loc[indice_editar, "Moneda_Cruce"] = moneda_cruce
             df.loc[indice_editar, "Cruce_Original"] = cruce_original
             df.loc[indice_editar, "Cruce_Total"] = cruce_total
+            df.loc[indice_editar, "Casetas"] = casetas
+            df.loc[indice_editar, "Horas_Termo"] = horas_termo
+            df.loc[indice_editar, "Lavado_Termo"] = lavado_termo
+            df.loc[indice_editar, "Movimiento_Local"] = mov_local
+            df.loc[indice_editar, "Puntualidad"] = puntualidad
+            df.loc[indice_editar, "Pension"] = pension
+            df.loc[indice_editar, "Estancia"] = estancia
+            df.loc[indice_editar, "Fianza_Termo"] = fianza
+            df.loc[indice_editar, "Renta_Termo"] = renta_termo
             df.loc[indice_editar, "Costo_Diesel"] = costo_diesel
             df.loc[indice_editar, "Costo_Total"] = costo_total
 
@@ -149,6 +145,3 @@ if os.path.exists(RUTA_RUTAS):
 
 else:
     st.warning("No hay rutas guardadas aún.")
-
-
-
