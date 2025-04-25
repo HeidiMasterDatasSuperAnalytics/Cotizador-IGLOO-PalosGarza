@@ -23,7 +23,7 @@ def calcular_costos(ruta, datos):
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
 
     # Costo Diesel Termo
-    costo_diesel_termo = horas_termo * diesel
+    costo_diesel_termo = horas_termo * 3 * diesel
 
     # Sueldo operador
     if tipo == "IMPO":
