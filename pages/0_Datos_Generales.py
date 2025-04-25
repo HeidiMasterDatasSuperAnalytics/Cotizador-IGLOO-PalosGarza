@@ -6,18 +6,23 @@ st.title("# Datos Generales de Operación")
 
 FILE = "datos_generales.csv"
 
+valores_por_defecto = {
+    "Rendimiento Camion": 2.5,
+    "Costo Diesel": 24,
+    "Horas Termo": 0,
+    "Rendimiento Termo": 3,
+    "Bono ISR IMSS": 462.66,
+    "Sueldo Operador": 2100,
+    "Pago x km IMPO": 2.10,
+    "Pago x km EXPO": 2.50,
+    "Pago fijo VACIO": 200.00
+}
+
 def load_defaults():
     if os.path.exists(FILE):
         return pd.read_csv(FILE).set_index("Parametro").to_dict()["Valor"]
     else:
-        return {
-            "Rendimiento Camion": 2.5,
-            "Costo Diesel": 24,
-            "Horas Termo": 0,
-            "Rendimiento Termo": 3,
-            "Bono ISR IMSS": 462.66,
-            "Sueldo Operador": 2100,
-        }
+        return valores_por_defecto.copy()
 
 def save_defaults(valores):
     df = pd.DataFrame(valores.items(), columns=["Parametro", "Valor"])
@@ -27,8 +32,8 @@ valores = load_defaults()
 
 st.subheader("Valores Editables")
 
-for key in valores:
-    valores[key] = st.number_input(key, value=float(valores[key]), step=0.1)
+for key in valores_por_defecto:
+    valores[key] = st.number_input(key, value=float(valores.get(key, valores_por_defecto[key])), step=0.1)
 
 if st.button("Guardar Datos Generales"):
     save_defaults(valores)
