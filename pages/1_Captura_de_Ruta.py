@@ -1,103 +1,83 @@
 import streamlit as st
 import pandas as pd
 import os
+from datetime import date
 
-st.title("# Captura de Nueva Ruta")
+st.title("# Captura de Ruta")
 
-FILE = "rutas_guardadas.csv"
-DATOS = "datos_generales.csv"
+RUTA_RUTAS = "rutas_guardadas.csv"
+RUTA_DATOS = "datos_generales.csv"
 
-def load_datos_generales():
-    if os.path.exists(DATOS):
-        return pd.read_csv(DATOS).set_index("Parametro").to_dict()["Valor"]
+def cargar_datos_generales():
+    if os.path.exists(RUTA_DATOS):
+        return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
     return {}
 
-if os.path.exists(FILE):
-    df = pd.read_csv(FILE)
-else:
-    df = pd.DataFrame(columns=[
-        "Tipo", "Cliente", "Origen", "Destino", "KM",
-        "Moneda", "Ingreso_Original", "Ingreso_Total",
-        "Moneda_Cruce", "Cruce_Original", "Cruce_Total",
-        "Casetas", "Horas_Termo", "Lavado_Termo", "Movimiento_Local",
-        "Puntualidad", "Pension", "Estancia", "Fianza_Termo", "Renta_Termo",
-        "Costo_Diesel", "Costo_Total"
-    ])
+datos_generales = cargar_datos_generales()
 
-datos = load_datos_generales()
+tipo_cambio_usd = float(datos_generales.get("Tipo de cambio USD", 17.5))
+tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
 
-st.subheader("Formulario para agregar nueva ruta")
+st.subheader("📝 Nueva Ruta")
 
+fecha = st.date_input("Fecha", value=date.today())
 tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
-cliente = st.text_input("Nombre del Cliente (opcional para VACIO)")
+cliente = st.text_input("Nombre del Cliente")
 origen = st.text_input("Origen")
 destino = st.text_input("Destino")
 km = st.number_input("Kilómetros recorridos", min_value=0.0)
 
-# Ingreso Flete
 moneda = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
 ingreso_original = st.number_input(f"Ingreso Flete en {moneda}", min_value=0.0)
-tipo_cambio = float(datos.get(f"Tipo de cambio {moneda}", 1.0))
+tipo_cambio = tipo_cambio_usd if moneda == "USD" else tipo_cambio_mxn
 ingreso_total = ingreso_original * tipo_cambio
 
-# Ingreso Cruce
 moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"])
 cruce_original = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0)
-tipo_cambio_cruce = float(datos.get(f"Tipo de cambio {moneda_cruce}", 1.0))
+tipo_cambio_cruce = tipo_cambio_usd if moneda_cruce == "USD" else tipo_cambio_mxn
 cruce_total = cruce_original * tipo_cambio_cruce
 
-# Otros costos
 casetas = st.number_input("Costo de Casetas", min_value=0.0)
 horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
-lavado_termo = st.number_input("Lavado de Termo", min_value=0.0, value=0.0)
-mov_local = st.number_input("Movimiento Local", min_value=0.0, value=0.0)
-puntualidad = st.number_input("Puntualidad", min_value=0.0, value=0.0)
-pension = st.number_input("Pensión", min_value=0.0, value=0.0)
-estancia = st.number_input("Estancia", min_value=0.0, value=0.0)
-fianza = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0, value=0.0)
-renta_termo = st.number_input("Renta de Termo", min_value=0.0, value=0.0)
-
-# Diesel
-rendimiento = float(datos.get("Rendimiento Camion", 2.5))
-diesel = float(datos.get("Costo Diesel", 24))
-costo_diesel = (km / rendimiento) * diesel if rendimiento > 0 else 0
-
-# Costo Total
-costos_extra = sum([lavado_termo, mov_local, puntualidad, pension, estancia, fianza, renta_termo])
-costo_total = costo_diesel + casetas + costos_extra + cruce_total
-
-# Mostrar resumen
-st.write(f"**Ingreso Flete Convertido (MXN):** ${ingreso_total:,.2f}")
-st.write(f"**Ingreso de Cruce Convertido (MXN):** ${cruce_total:,.2f}")
-st.write(f"**Costo Diesel Estimado:** ${costo_diesel:,.2f}")
-st.write(f"**Costo Total Calculado:** ${costo_total:,.2f}")
+lavado = st.number_input("Lavado Termo", min_value=0.0)
+mov_local = st.number_input("Movimiento Local", min_value=0.0)
+puntualidad = st.number_input("Puntualidad", min_value=0.0)
+pension = st.number_input("Pensión", min_value=0.0)
+estancia = st.number_input("Estancia", min_value=0.0)
+fianza = st.number_input("Fianza termo Rentado/Externo", min_value=0.0)
+renta = st.number_input("Renta de Termo", min_value=0.0)
 
 if st.button("Guardar Ruta"):
-    nueva_ruta = pd.DataFrame([{
+    nueva_ruta = pd.DataFrame([{ 
+        "Fecha": fecha,
         "Tipo": tipo,
         "Cliente": cliente,
         "Origen": origen,
         "Destino": destino,
         "KM": km,
+        "Horas_Termo": horas_termo,
+        "Casetas": casetas,
+        "Lavado_Termo": lavado,
+        "Movimiento_Local": mov_local,
+        "Puntualidad": puntualidad,
+        "Pension": pension,
+        "Estancia": estancia,
+        "Fianza_Termo": fianza,
+        "Renta_Termo": renta,
         "Moneda": moneda,
         "Ingreso_Original": ingreso_original,
         "Ingreso_Total": ingreso_total,
         "Moneda_Cruce": moneda_cruce,
         "Cruce_Original": cruce_original,
         "Cruce_Total": cruce_total,
-        "Casetas": casetas,
-        "Horas_Termo": horas_termo,
-        "Lavado_Termo": lavado_termo,
-        "Movimiento_Local": mov_local,
-        "Puntualidad": puntualidad,
-        "Pension": pension,
-        "Estancia": estancia,
-        "Fianza_Termo": fianza,
-        "Renta_Termo": renta_termo,
-        "Costo_Diesel": costo_diesel,
-        "Costo_Total": costo_total
     }])
-    df = pd.concat([df, nueva_ruta], ignore_index=True)
-    df.to_csv(FILE, index=False)
-    st.success("✅ La ruta se guardó exitosamente.")
-    st.rerun()
+
+    if os.path.exists(RUTA_RUTAS):
+        rutas_existentes = pd.read_csv(RUTA_RUTAS)
+        rutas_actualizadas = pd.concat([rutas_existentes, nueva_ruta], ignore_index=True)
+    else:
+        rutas_actualizadas = nueva_ruta
+
+    rutas_actualizadas.to_csv(RUTA_RUTAS, index=False)
+    st.success("✅ Ruta guardada correctamente.")
+    st.experimental_rerun()
