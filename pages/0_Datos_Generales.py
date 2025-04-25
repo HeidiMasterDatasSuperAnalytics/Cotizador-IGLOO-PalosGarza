@@ -2,6 +2,35 @@ import streamlit as st
 import pandas as pd
 import os
 
+# 🔵 LOGO en la esquina superior derecha
+st.markdown("""
+    <style>
+    .logo-container {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 9999;
+    }
+    .logo-container img {
+        height: 40px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .logo-light { display: none; }
+        .logo-dark { display: inline; }
+    }
+    @media (prefers-color-scheme: light) {
+        .logo-light { display: inline; }
+        .logo-dark { display: none; }
+    }
+    </style>
+
+    <div class="logo-container">
+        <img src="Igloo Original.png" class="logo-light">
+        <img src="Igloo White.png" class="logo-dark">
+    </div>
+""", unsafe_allow_html=True)
+
 st.title("Datos Generales de Operación")
 
 FILE = "datos_generales.csv"
