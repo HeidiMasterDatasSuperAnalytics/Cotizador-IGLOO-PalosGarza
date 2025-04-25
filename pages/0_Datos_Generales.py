@@ -37,6 +37,6 @@ for key in valores_por_defecto:
 
 if st.button("Guardar Datos Generales"):
     save_defaults(valores)
-    st.success("Datos guardados correctamente.")
+    st.success("✅ Datos guardados correctamente.")
 
 
