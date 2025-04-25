@@ -25,9 +25,6 @@ def calcular_costos(ruta, datos):
     # Costo Diesel Termo
     costo_diesel_termo = (km / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
 
-    # Suma de ambos
-    costo_diesel = costo_diesel_camion + costo_diesel_termo
-
     # Sueldo operador
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
@@ -36,8 +33,9 @@ def calcular_costos(ruta, datos):
     else:
         sueldo = float(datos.get("Pago fijo VACIO", 200))
 
-    # Costos adicionales
-    extras = ruta.get("Casetas", 0) + sum([
+    # Costos
+    casetas = ruta.get("Casetas", 0)
+    extras = sum([
         ruta.get("Lavado_Termo", 0),
         ruta.get("Movimiento_Local", 0),
         ruta.get("Puntualidad", 0),
@@ -47,11 +45,13 @@ def calcular_costos(ruta, datos):
         ruta.get("Renta_Termo", 0)
     ])
 
-    # Costo de cruce (convertido)
+    # Costo de cruce
     cruce = ruta.get("Cruce_Total", 0)
 
-    costo_total = costo_diesel + sueldo + extras + cruce
-    return costo_diesel_camion, costo_diesel_termo, sueldo, extras, cruce, costo_total
+    # Costo total
+    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + casetas + extras + cruce
+
+    return costo_diesel_camion, costo_diesel_termo, sueldo, casetas, extras, cruce, costo_total
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
@@ -82,6 +82,7 @@ if os.path.exists(RUTA_RUTAS):
         diesel_camion_total = 0
         diesel_termo_total = 0
         sueldo_total = 0
+        casetas_total = 0
         extras_total = 0
         cruce_total = 0
         costo_total_general = 0
@@ -89,11 +90,12 @@ if os.path.exists(RUTA_RUTAS):
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel_camion, costo_diesel_termo, sueldo, extras, cruce, total_ruta = calcular_costos(ruta, datos)
+            costo_diesel_camion, costo_diesel_termo, sueldo, casetas, extras, cruce, total_ruta = calcular_costos(ruta, datos)
             ingreso_total += ruta["Ingreso_Total"]
             diesel_camion_total += costo_diesel_camion
             diesel_termo_total += costo_diesel_termo
             sueldo_total += sueldo
+            casetas_total += casetas
             extras_total += extras
             cruce_total += cruce
             costo_total_general += total_ruta
@@ -105,9 +107,10 @@ if os.path.exists(RUTA_RUTAS):
             - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
             - Diesel Camión: ${costo_diesel_camion:,.2f}
             - Diesel Termo: ${costo_diesel_termo:,.2f}
+            - Casetas: ${casetas:,.2f}
+            - Extras: ${extras:,.2f}
             - Cruce: ${cruce:,.2f}
             - Sueldo operador: ${sueldo:,.2f}
-            - Casetas y Extras: ${extras:,.2f}
             - **Costo Total Ruta:** ${total_ruta:,.2f}
             """)
 
@@ -118,9 +121,12 @@ if os.path.exists(RUTA_RUTAS):
         st.success(f"Utilidad total: ${utilidad:,.2f}")
         st.info(f"Rentabilidad total: {rentabilidad:.2f}%")
 
-        st.subheader("📋 Resumen de Gastos Diesel")
+        st.subheader("📋 Resumen de Gastos")
         st.write(f"**Total Diesel Camión:** ${diesel_camion_total:,.2f}")
         st.write(f"**Total Diesel Termo:** ${diesel_termo_total:,.2f}")
+        st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
+        st.write(f"**Total Extras:** ${extras_total:,.2f}")
+        st.write(f"**Total Cruces:** ${cruce_total:,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
