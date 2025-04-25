@@ -28,7 +28,7 @@ st.markdown(f"""
         position: absolute;
         top: 10px;
         right: 20px;
-        z-index: 9999;
+        z-index:00001;
     }}
     .logo-img {{
         height: 40px;
@@ -48,6 +48,7 @@ st.markdown(f"""
         <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-img logo-dark">
     </div>
 """, unsafe_allow_html=True)
+
 
 st.title("Datos Generales de Operación")
 
