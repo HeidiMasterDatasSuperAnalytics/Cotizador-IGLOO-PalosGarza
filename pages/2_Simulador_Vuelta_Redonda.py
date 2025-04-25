@@ -83,6 +83,7 @@ if os.path.exists(RUTA_RUTAS):
             rutas.append(vacio_rutas.loc[vacio_sel])
         rutas.append(expo_rutas.loc[expo_sel])
 
+               km_total = 0
         ingreso_total = 0
         diesel_camion_total = 0
         diesel_termo_total = 0
@@ -97,6 +98,7 @@ if os.path.exists(RUTA_RUTAS):
 
         for ruta in rutas:
             costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, total_ruta = calcular_costos(ruta, datos)
+            km_total += ruta["KM"]
             ingreso_total += ruta["Ingreso_Total"]
             diesel_camion_total += costo_diesel_camion
             diesel_termo_total += costo_diesel_termo
@@ -136,6 +138,7 @@ if os.path.exists(RUTA_RUTAS):
         st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
 
         st.subheader("📋 Resumen de Gastos")
+        st.write(f"**Total Kilómetros Recorridos:** {km_total:,.2f} km")
         st.write(f"**Total Diesel Camión:** ${diesel_camion_total:,.2f}")
         st.write(f"**Total Diesel Termo:** ${diesel_termo_total:,.2f}")
         st.write(f"**Total Sueldos Operador:** ${sueldo_total:,.2f}")
@@ -143,6 +146,7 @@ if os.path.exists(RUTA_RUTAS):
         st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
         st.write(f"**Total Extras:** ${extras_total:,.2f}")
         st.write(f"**Total Cruces:** ${cruce_total:,.2f}")
+
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
