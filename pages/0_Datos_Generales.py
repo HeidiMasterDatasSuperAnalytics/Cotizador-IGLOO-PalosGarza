@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.title("# Datos Generales de Operación")
+st.title("Datos Generales de Operación")
 
 FILE = "datos_generales.csv"
 
