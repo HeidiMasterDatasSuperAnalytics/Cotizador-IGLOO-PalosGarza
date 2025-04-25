@@ -92,4 +92,4 @@ if st.button("Guardar Ruta"):
     df = pd.concat([df, nueva_ruta], ignore_index=True)
     df.to_csv(FILE, index=False)
     st.success("Ruta guardada exitosamente.")
-    st.experimental_rerun()
+    st.rerun()
