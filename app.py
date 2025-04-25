@@ -1,10 +1,18 @@
 import streamlit as st
 
-st.set_page_config(page_title='Cotizador IGLOO', layout='wide')
-st.title('Bienvenido al Cotizador de Rutas')
+# Centrado y grande
+st.image("Igloo Original.png", width=500)
 
 st.markdown("""
-Este cotizador te permite capturar rutas, configurar tus costos operativos,
-comparar vueltas redondas y gestionar tu base de datos de clientes y recorridos.
-Usa el menú de la izquierda para navegar entre las secciones.
+# Bienvenido al Cotizador de Rutas 🚛📊
+
+Esta herramienta te permitirá capturar, gestionar y simular rutas de forma eficiente y precisa.  
+Utiliza el menú lateral para comenzar con:
+
+- 📋 **Datos Generales**
+- 🛣️ **Captura de Ruta**
+- 📁 **Gestión de Rutas**
+- 🔁 **Simulador Vuelta Redonda**
+
+---
 """)
