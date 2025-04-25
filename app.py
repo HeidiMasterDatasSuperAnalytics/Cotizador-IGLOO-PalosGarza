@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Centrado y grande
-st.image("Igloo Original.png", width=500)
+st.image("Igloo Original.png", width=300)
 
 st.markdown("""
 # Bienvenido al Cotizador de Rutas 🚛📊
