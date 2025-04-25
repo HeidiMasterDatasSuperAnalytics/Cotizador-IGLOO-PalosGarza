@@ -19,6 +19,7 @@ else:
         "Tipo", "Cliente", "Origen", "Destino", "KM", "Horas_Termo", "Casetas",
         "Lavado_Termo", "Movimiento_Local", "Puntualidad", "Pension", "Estancia",
         "Fianza_Termo", "Renta_Termo", "Moneda", "Ingreso_Original", "Ingreso_Total",
+        "Moneda_Cruce", "Cruce_Original", "Cruce_Total",
         "Costo_Diesel", "Costo_Total"
     ])
 
@@ -34,13 +35,17 @@ km = st.number_input("Kilómetros recorridos", min_value=0.0)
 horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
 casetas = st.number_input("Costo de Casetas (MXN)", min_value=0.0)
 
-# Moneda e ingreso
+# Ingreso
 moneda = st.selectbox("Moneda del ingreso", ["MXN", "USD"])
 ingreso_original = st.number_input(f"Ingreso en {moneda}", min_value=0.0)
-
-# Conversión
 tipo_cambio = float(datos.get(f"Tipo de cambio {moneda}", 1.0))
 ingreso_total = ingreso_original * tipo_cambio
+
+# Cruce
+moneda_cruce = st.selectbox("Moneda del cruce", ["MXN", "USD"])
+cruce_original = st.number_input(f"Costo de Cruce en {moneda_cruce}", min_value=0.0)
+tipo_cambio_cruce = float(datos.get(f"Tipo de cambio {moneda_cruce}", 1.0))
+cruce_total = cruce_original * tipo_cambio_cruce
 
 # Campos opcionales
 lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=0.0)
@@ -51,20 +56,21 @@ estancia = st.number_input("Estancia", min_value=0.0, value=0.0)
 fianza = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0, value=0.0)
 renta_termo = st.number_input("Renta de Termo", min_value=0.0, value=0.0)
 
-# Cálculo de diesel
+# Diesel
 rendimiento = float(datos.get("Rendimiento Camion", 2.5))
 diesel = float(datos.get("Costo Diesel", 24))
 costo_diesel = (km / rendimiento) * diesel if rendimiento > 0 else 0
 
-# Costo total
+# Total
 costos_extra = sum([lavado_termo, mov_local, puntualidad, pension, estancia, fianza, renta_termo])
-costo_total = costo_diesel + casetas + costos_extra
+costo_total = costo_diesel + casetas + costos_extra + cruce_total
 
-# Mostrar desglose
+# Mostrar resumen
 st.write(f"**Ingreso Convertido (MXN):** ${ingreso_total:,.2f}")
 st.write(f"**Costo Diesel Estimado:** ${costo_diesel:,.2f}")
+st.write(f"**Cruce Convertido (MXN):** ${cruce_total:,.2f}")
 st.write(f"**Casetas:** ${casetas:,.2f}")
-st.write(f"**Costos Extra (opcionales):** ${costos_extra:,.2f}")
+st.write(f"**Extras:** ${costos_extra:,.2f}")
 st.write(f"**Costo Total Calculado:** ${costo_total:,.2f}")
 
 if st.button("Guardar Ruta"):
@@ -86,6 +92,9 @@ if st.button("Guardar Ruta"):
         "Moneda": moneda,
         "Ingreso_Original": ingreso_original,
         "Ingreso_Total": ingreso_total,
+        "Moneda_Cruce": moneda_cruce,
+        "Cruce_Original": cruce_original,
+        "Cruce_Total": cruce_total,
         "Costo_Diesel": costo_diesel,
         "Costo_Total": costo_total
     }])
@@ -93,5 +102,6 @@ if st.button("Guardar Ruta"):
     df.to_csv(FILE, index=False)
     st.success("✅ La ruta se guardó exitosamente.")
     st.rerun()
+
 
 
