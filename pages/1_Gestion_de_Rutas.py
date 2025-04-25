@@ -20,7 +20,7 @@ if not df.empty:
         df.drop(index=to_delete, inplace=True)
         df.to_csv(FILE, index=False)
         st.success("Rutas eliminadas correctamente.")
-        st.experimental_rerun()
+        st.rerun()
 
     st.write("Puedes editar los datos directamente en Excel y volver a subirlos si lo deseas.")
     st.download_button("Descargar rutas en Excel", df.to_csv(index=False), file_name="rutas_guardadas.csv")
