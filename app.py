@@ -17,7 +17,7 @@ else:
 
 # Texto de bienvenida
 st.markdown("""
-# Bienvenido al Cotizador de Rutas 🚛📊
+# Bienvenido al Cotizador de Rutas
 
 Esta herramienta te permitirá capturar, gestionar y simular rutas de forma eficiente y precisa.  
 Utiliza el menú lateral para comenzar con:
