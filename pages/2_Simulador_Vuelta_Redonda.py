@@ -19,11 +19,11 @@ def calcular_costos(ruta, datos):
     diesel = float(datos.get("Costo Diesel", 24))
     rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
 
-    # Costo Diesel Camión (por km)
+    # Costo Diesel Camión
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
 
-    # Costo Diesel Termo (por horas de uso)
-    costo_diesel_termo = horas_termo * 3 * diesel
+    # Costo Diesel Termo
+    costo_diesel_termo = horas_termo * diesel
 
     # Sueldo operador
     if tipo == "IMPO":
@@ -32,6 +32,9 @@ def calcular_costos(ruta, datos):
         sueldo = km * float(datos.get("Pago x km EXPO", 2.5))
     else:
         sueldo = float(datos.get("Pago fijo VACIO", 200))
+
+    # Bono ISR IMSS
+    bono_isr_imss = ruta.get("Bono_ISR_IMSS", 0)
 
     # Costos adicionales
     casetas = ruta.get("Casetas", 0)
@@ -48,9 +51,9 @@ def calcular_costos(ruta, datos):
     cruce = ruta.get("Cruce_Total", 0)
 
     # Costo total de ruta
-    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + casetas + extras + cruce
+    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono_isr_imss + casetas + extras + cruce
 
-    return costo_diesel_camion, costo_diesel_termo, sueldo, casetas, extras, cruce, costo_total
+    return costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, costo_total
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
@@ -81,6 +84,7 @@ if os.path.exists(RUTA_RUTAS):
         diesel_camion_total = 0
         diesel_termo_total = 0
         sueldo_total = 0
+        bono_total = 0
         casetas_total = 0
         extras_total = 0
         cruce_total = 0
@@ -89,11 +93,12 @@ if os.path.exists(RUTA_RUTAS):
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel_camion, costo_diesel_termo, sueldo, casetas, extras, cruce, total_ruta = calcular_costos(ruta, datos)
+            costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, total_ruta = calcular_costos(ruta, datos)
             ingreso_total += ruta["Ingreso_Total"]
             diesel_camion_total += costo_diesel_camion
             diesel_termo_total += costo_diesel_termo
             sueldo_total += sueldo
+            bono_total += bono_isr_imss
             casetas_total += casetas
             extras_total += extras
             cruce_total += cruce
@@ -106,23 +111,32 @@ if os.path.exists(RUTA_RUTAS):
             - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
             - Diesel Camión: ${costo_diesel_camion:,.2f}
             - Diesel Termo: ${costo_diesel_termo:,.2f}
+            - Sueldo operador: ${sueldo:,.2f}
+            - Bono ISR/IMSS: ${bono_isr_imss:,.2f}
             - Casetas: ${casetas:,.2f}
             - Extras: ${extras:,.2f}
             - Cruce: ${cruce:,.2f}
-            - Sueldo operador: ${sueldo:,.2f}
             - **Costo Total Ruta:** ${total_ruta:,.2f}
             """)
 
-        utilidad = ingreso_total - costo_total_general
-        rentabilidad = (utilidad / ingreso_total * 100) if ingreso_total > 0 else 0
+        utilidad_bruta = ingreso_total - costo_total_general
+        estimado_costo_indirecto = ingreso_total * 0.35
+        utilidad_neta = utilidad_bruta - estimado_costo_indirecto
+        porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.subheader("📊 Resultado General")
-        st.success(f"Utilidad total: ${utilidad:,.2f}")
-        st.info(f"Rentabilidad total: {rentabilidad:.2f}%")
+        st.success(f"Ingreso Total Vuelta Redonda: ${ingreso_total:,.2f}")
+        st.info(f"Costo Total Vuelta Redonda: ${costo_total_general:,.2f}")
+        st.success(f"Utilidad Bruta: ${utilidad_bruta:,.2f}")
+        st.info(f"Estimado Costo Indirecto (35%): ${estimado_costo_indirecto:,.2f}")
+        st.success(f"Utilidad Neta Estimada: ${utilidad_neta:,.2f}")
+        st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
 
         st.subheader("📋 Resumen de Gastos")
         st.write(f"**Total Diesel Camión:** ${diesel_camion_total:,.2f}")
         st.write(f"**Total Diesel Termo:** ${diesel_termo_total:,.2f}")
+        st.write(f"**Total Sueldos Operador:** ${sueldo_total:,.2f}")
+        st.write(f"**Total Bono ISR/IMSS:** ${bono_total:,.2f}")
         st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
         st.write(f"**Total Extras:** ${extras_total:,.2f}")
         st.write(f"**Total Cruces:** ${cruce_total:,.2f}")
