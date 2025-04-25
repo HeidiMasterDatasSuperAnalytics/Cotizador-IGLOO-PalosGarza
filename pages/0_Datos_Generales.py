@@ -9,10 +9,8 @@ FILE = "datos_generales.csv"
 valores_por_defecto = {
     "Rendimiento Camion": 2.5,
     "Costo Diesel": 24,
-    "Horas Termo": 0,
     "Rendimiento Termo": 3,
     "Bono ISR IMSS": 462.66,
-    "Sueldo Operador": 2100,
     "Pago x km IMPO": 2.10,
     "Pago x km EXPO": 2.50,
     "Pago fijo VACIO": 200.00
@@ -38,3 +36,4 @@ for key in valores_por_defecto:
 if st.button("Guardar Datos Generales"):
     save_defaults(valores)
     st.success("Datos guardados correctamente.")
+
