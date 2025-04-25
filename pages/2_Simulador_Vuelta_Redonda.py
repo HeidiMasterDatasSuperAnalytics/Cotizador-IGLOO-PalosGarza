@@ -17,7 +17,7 @@ def calcular_costos(ruta, datos):
     km = ruta["KM"]
     diesel = float(datos.get("Costo Diesel", 24))
     rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
-    rendimiento_termo = float(datos.get("Rendimiento termo", 3))
+    rendimiento_termo = float(datos.get("Horas de uso del Termo", 3))
 
     # Costo Diesel Camión
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
