@@ -1,3 +1,5 @@
+# pages/1_Gestion_de_Rutas.py
+
 import streamlit as st
 import pandas as pd
 import os
@@ -43,6 +45,14 @@ if os.path.exists(RUTA_RUTAS):
         df.to_csv(RUTA_RUTAS, index=False)
         st.success("✅ Rutas eliminadas correctamente.")
         st.rerun()
+
+    # Botón para descargar copia de seguridad
+    st.subheader("📥 Descargar copia de seguridad de datos")
+    st.download_button("Descargar rutas_guardadas.csv", df.to_csv(index=False), file_name="rutas_guardadas.csv")
+
+    if os.path.exists(RUTA_DATOS):
+        datos_df = pd.read_csv(RUTA_DATOS)
+        st.download_button("Descargar datos_generales.csv", datos_df.to_csv(index=False), file_name="datos_generales.csv")
 
 else:
     st.warning("No hay rutas guardadas aún.")
