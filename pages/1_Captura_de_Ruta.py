@@ -1,33 +1,57 @@
 import streamlit as st
 import pandas as pd
 import os
-
-# LOGO
 from PIL import Image
+import base64
+from io import BytesIO
 
-logo = Image.open("Igloo Original.png")
-col1, col2 = st.columns([1, 5])
+# Función para convertir imagen en base64
+def image_to_base64(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode()
 
-with col1:
-    st.image(logo, width=100)
+# Cargar imágenes
+logo_claro = Image.open("Igloo Original.png")
+logo_oscuro = Image.open("Igloo White.png")
 
-with col2:
-    st.title("Captura de Ruta")
+# Convertir a base64
+logo_claro_b64 = image_to_base64(logo_claro)
+logo_oscuro_b64 = image_to_base64(logo_oscuro)
 
-# Rutas de archivos
+# Mostrar logo en esquina superior izquierda
+st.markdown(f"""
+    <div style='position: absolute; top: 10px; left: 10px;'>
+        <img src="data:image/png;base64,{logo_claro_b64}" class="logo-light" style="height:50px;">
+        <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-dark" style="height:50px;">
+    </div>
+    <style>
+    @media (prefers-color-scheme: dark) {{
+        .logo-light {{ display: none; }}
+        .logo-dark {{ display: inline; }}
+    }}
+    @media (prefers-color-scheme: light) {{
+        .logo-light {{ display: inline; }}
+        .logo-dark {{ display: none; }}
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# Título principal
+st.title("Captura de Ruta")
+
+# Ruta donde guardamos
 RUTA_RUTAS = "rutas_guardadas.csv"
 
-# Cargar rutas existentes
+# Si ya existe cargamos, si no creamos vacío
 if os.path.exists(RUTA_RUTAS):
     df_rutas = pd.read_csv(RUTA_RUTAS)
 else:
     df_rutas = pd.DataFrame()
 
-# Formulario de Captura
-with st.form("Captura de Ruta"):
-
+# Formulario
+with st.form("captura_ruta"):
     fecha = st.date_input("Fecha de captura")
-
     tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
     cliente = st.text_input("Nombre del Cliente")
     origen = st.text_input("Origen")
@@ -41,9 +65,9 @@ with st.form("Captura de Ruta"):
     ingreso_cruce = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0)
 
     casetas = st.number_input("Costo de Casetas", min_value=0.0)
-
     horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
-    lavado_termo = st.number_input("Lavado de Termo", min_value=0.0)
+
+    lavado_termo = st.number_input("Lavado Termo", min_value=0.0)
     movimiento_local = st.number_input("Movimiento Local", min_value=0.0)
     puntualidad = st.number_input("Puntualidad", min_value=0.0)
     pension = st.number_input("Pensión", min_value=0.0)
@@ -53,7 +77,8 @@ with st.form("Captura de Ruta"):
 
     submitted = st.form_submit_button("Guardar Ruta")
 
-   if submitted:
+# Acción al guardar
+if submitted:
     nueva_ruta = {
         "Fecha": fecha,
         "Tipo": tipo,
@@ -79,4 +104,4 @@ with st.form("Captura de Ruta"):
     df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
     df_rutas.to_csv(RUTA_RUTAS, index=False)
     st.success("✅ La ruta se guardó exitosamente.")
-    st.rerun()   # <--- actualizado aquí
+    st.rerun()  # <-- ahora corregido
