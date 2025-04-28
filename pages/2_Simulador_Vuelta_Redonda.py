@@ -50,7 +50,6 @@ st.markdown(f"""
 
 st.title("Simulador de Vuelta Redonda")
 
-# Rutas
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
@@ -153,7 +152,6 @@ if os.path.exists(RUTA_RUTAS):
                 ingreso_ruta = ingreso_original * tipo_cambio
 
             ingreso_total += safe_number(ingreso_ruta)
-
             diesel_camion_total += safe_number(costo_diesel_camion)
             diesel_termo_total += safe_number(costo_diesel_termo)
             sueldo_total += safe_number(sueldo)
@@ -183,38 +181,35 @@ if os.path.exists(RUTA_RUTAS):
         utilidad_neta = utilidad_bruta - estimado_costo_indirecto
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-      if os.path.exists(RUTA_RUTAS):
-    # (todo el procesamiento que ya tienes, incluyendo el botón, cálculos y resultados)
+        st.subheader("📊 Resultado General")
+        st.markdown(f"Ingreso Total Vuelta Redonda: {color_value(ingreso_total, tipo='ingreso')}", unsafe_allow_html=True)
+        st.markdown(f"Costo Total Vuelta Redonda: {color_value(costo_total_general, tipo='ingreso')}", unsafe_allow_html=True)
+        st.markdown(f"Utilidad Bruta: {color_value(utilidad_bruta)}", unsafe_allow_html=True)
+        st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
+        st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
 
-    st.subheader("📊 Resultado General")
-    st.markdown(f"Ingreso Total Vuelta Redonda: {color_value(ingreso_total, tipo='ingreso')}", unsafe_allow_html=True)
-    st.markdown(f"Costo Total Vuelta Redonda: {color_value(costo_total_general, tipo='ingreso')}", unsafe_allow_html=True)
-    st.markdown(f"Utilidad Bruta: {color_value(utilidad_bruta)}", unsafe_allow_html=True)
-    st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
-    st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
+        color_utilidad = "green" if porcentaje_utilidad_neta >= 0 else "red"
+        fondo_utilidad = "#e6f9e6" if porcentaje_utilidad_neta >= 0 else "#f9e6e6"
+        st.markdown(f"""
+        <div style='background-color: {fondo_utilidad}; padding: 10px; border-radius: 10px;'>
+            <span style='color:{color_utilidad}; font-weight:bold;'>% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%</span>
+        </div>
+        """, unsafe_allow_html=True)
 
-    color_utilidad = "green" if porcentaje_utilidad_neta >= 0 else "red"
-    fondo_utilidad = "#e6f9e6" if porcentaje_utilidad_neta >= 0 else "#f9e6e6"
-    st.markdown(f"""
-    <div style='background-color: {fondo_utilidad}; padding: 10px; border-radius: 10px;'>
-        <span style='color:{color_utilidad}; font-weight:bold;'>% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%</span>
-    </div>
-    """, unsafe_allow_html=True)
+        st.subheader("📋 Resumen de Gastos")
+        col1, col2 = st.columns(2)
 
-    st.subheader("📋 Resumen de Gastos")
-    col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
+            st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
+            st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
+            st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
 
-    with col1:
-        st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
-        st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
-        st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
-        st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
-
-    with col2:
-        st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
-        st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
-        st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
-        st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
+        with col2:
+            st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
+            st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
+            st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
+            st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
