@@ -214,6 +214,21 @@ if os.path.exists(RUTA_RUTAS):
             <span style='color:{color_utilidad}; font-weight:bold;'>% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%</span>
         </div>
         """, unsafe_allow_html=True)
+        
+        st.subheader("📋 Resumen de Gastos")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
+    st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
+    st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
+    st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
+
+with col2:
+    st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
+    st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
+    st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
+    st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
