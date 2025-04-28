@@ -16,11 +16,6 @@ def image_to_base64(img):
 def safe_number(x):
     return 0 if (x is None or (isinstance(x, float) and math.isnan(x))) else x
 
-# Función para aplicar color a valores positivos o negativos
-def color_value(value):
-    color = "green" if value >= 0 else "red"
-    return f"<span style='color:{color}; font-weight:bold;'>${value:,.2f}</span>"
-
 # Cargar logos
 logo_claro = Image.open("Igloo Original.png")
 logo_oscuro = Image.open("Igloo White.png")
@@ -176,7 +171,7 @@ if os.path.exists(RUTA_RUTAS):
             - Extras: ${safe_number(extras):,.2f}
             - Costo Cruce: ${safe_number(costo_cruce):,.2f}
             - **Costo Total Ruta:** ${safe_number(total_ruta):,.2f}
-            """, unsafe_allow_html=True)
+            """)
 
         utilidad_bruta = ingreso_total - costo_total_general
         estimado_costo_indirecto = ingreso_total * 0.35
@@ -184,11 +179,11 @@ if os.path.exists(RUTA_RUTAS):
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.subheader("📊 Resultado General")
-        st.markdown(f"Ingreso Total Vuelta Redonda: {color_value(ingreso_total)}", unsafe_allow_html=True)
-        st.markdown(f"Costo Total Vuelta Redonda: {color_value(costo_total_general)}", unsafe_allow_html=True)
-        st.markdown(f"Utilidad Bruta: {color_value(utilidad_bruta)}", unsafe_allow_html=True)
-        st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
-        st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
+        st.success(f"Ingreso Total Vuelta Redonda: ${safe_number(ingreso_total):,.2f}")
+        st.info(f"Costo Total Vuelta Redonda: ${safe_number(costo_total_general):,.2f}")
+        st.success(f"Utilidad Bruta: ${safe_number(utilidad_bruta):,.2f}")
+        st.info(f"Estimado Costo Indirecto (35%): ${safe_number(estimado_costo_indirecto):,.2f}")
+        st.success(f"Utilidad Neta Estimada: ${safe_number(utilidad_neta):,.2f}")
         st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
 
         st.subheader("📋 Resumen de Gastos")
