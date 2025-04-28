@@ -69,7 +69,7 @@ def calcular_costos(ruta, datos):
     bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
 
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
-    costo_diesel_termo = (horas_termo / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
+    costo_diesel_termo = horas_termo * rendimiento_termo * diesel if rendimiento_termo > 0 else 0
 
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
