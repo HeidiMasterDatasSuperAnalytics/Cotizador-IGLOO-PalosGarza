@@ -63,8 +63,8 @@ def load_datos_generales():
 # Función para calcular costos
 def calcular_costos(ruta, datos):
     tipo = ruta["Tipo"]
-    km = ruta["KM"]
-    horas_termo = ruta.get("Horas_Termo", 0)
+    km = safe_number(ruta.get("KM", 0))
+    horas_termo = safe_number(ruta.get("Horas_Termo", 0))
 
     diesel = float(datos.get("Costo Diesel", 24))
     rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
@@ -84,17 +84,27 @@ def calcular_costos(ruta, datos):
         sueldo = float(datos.get("Pago fijo VACIO", 200))
         bono = 0
 
-    casetas = ruta.get("Casetas", 0)
+    casetas = safe_number(ruta.get("Casetas", 0))
     extras = sum([
-        ruta.get("Lavado_Termo", 0),
-        ruta.get("Movimiento_Local", 0),
-        ruta.get("Puntualidad", 0),
-        ruta.get("Pension", 0),
-        ruta.get("Estancia", 0),
-        ruta.get("Fianza_Termo", 0),
-        ruta.get("Renta_Termo", 0)
+        safe_number(ruta.get("Lavado_Termo", 0)),
+        safe_number(ruta.get("Movimiento_Local", 0)),
+        safe_number(ruta.get("Puntualidad", 0)),
+        safe_number(ruta.get("Pension", 0)),
+        safe_number(ruta.get("Estancia", 0)),
+        safe_number(ruta.get("Fianza_Termo", 0)),
+        safe_number(ruta.get("Renta_Termo", 0))
     ])
-    costo_cruce = ruta.get("Costo_Cruce", 0)
+
+    # 🔥 Calcular correctamente costo de cruce
+    ingreso_cruce = safe_number(ruta.get("Cruce_Original", 0))
+    moneda_cruce = ruta.get("Moneda_Cruce", "MXN")
+    tipo_cambio_usd = float(datos.get("Tipo de cambio USD", 17.5))
+    tipo_cambio_mxn = float(datos.get("Tipo de cambio MXN", 1.0))
+
+    if moneda_cruce == "USD":
+        costo_cruce = ingreso_cruce * tipo_cambio_usd
+    else:
+        costo_cruce = ingreso_cruce * tipo_cambio_mxn
 
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce
 
@@ -148,12 +158,8 @@ if os.path.exists(RUTA_RUTAS):
             costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
             km_total += safe_number(ruta.get("KM", 0))
 
-            # Calcular correctamente el ingreso convertido
             ingreso_original = safe_number(ruta.get("Ingreso_Original", 0))
             moneda_ingreso = ruta.get("Moneda", "MXN")
-
-            tipo_cambio_usd = float(datos.get("Tipo de cambio USD", 17.5))
-            tipo_cambio_mxn = float(datos.get("Tipo de cambio MXN", 1.0))
 
             if moneda_ingreso == "USD":
                 ingreso_ruta = ingreso_original * tipo_cambio_usd
@@ -204,21 +210,6 @@ if os.path.exists(RUTA_RUTAS):
             <span style='color:{color_utilidad}; font-weight:bold;'>% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%</span>
         </div>
         """, unsafe_allow_html=True)
-
-        st.subheader("📋 Resumen de Gastos")
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
-            st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
-            st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
-            st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
-
-        with col2:
-            st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
-            st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
-            st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
-            st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
