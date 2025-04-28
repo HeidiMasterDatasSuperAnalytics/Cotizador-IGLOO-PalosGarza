@@ -133,31 +133,27 @@ if os.path.exists(RUTA_RUTAS):
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
-            km_total += ruta["KM"]
-            ingreso_total += ruta["Ingreso_Total"]
-            diesel_camion_total += costo_diesel_camion
-            diesel_termo_total += costo_diesel_termo
-            sueldo_total += sueldo
-            bono_total += bono
-            casetas_total += casetas
-            extras_total += extras
-            cruce_total += costo_cruce
-            costo_total_general += total_ruta
+    costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
+    km_total += ruta["KM"]
 
-            st.markdown(f"""
-            **{ruta['Tipo']} — {ruta['Cliente']} ➔ {ruta['Origen']} → {ruta['Destino']}**
-            - Moneda: {ruta.get('Moneda', 'MXN')}
-            - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
-            - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
-            - Diesel Camión: ${costo_diesel_camion:,.2f}
-            - Diesel Termo: ${costo_diesel_termo:,.2f}
-            - Sueldo Operador: ${sueldo:,.2f}
-            - Bono ISR/IMSS: ${bono:,.2f}
-            - Casetas: ${casetas:,.2f}
-            - Extras: ${extras:,.2f}
-            - Costo Cruce: ${costo_cruce:,.2f}
-            - **Costo Total Ruta:** ${total_ruta:,.2f}
+    # Aquí corregimos el ingreso
+    if "Ingreso_Total" in ruta:
+        ingreso_ruta = ruta["Ingreso_Total"]
+    else:
+        ingreso_original = ruta.get("Ingreso_Original", 0)
+        tipo_cambio = ruta.get("Tipo_Cambio", 1)
+        ingreso_ruta = ingreso_original * tipo_cambio
+
+    ingreso_total += ingreso_ruta
+
+    diesel_camion_total += costo_diesel_camion
+    diesel_termo_total += costo_diesel_termo
+    sueldo_total += sueldo
+    bono_total += bono
+    casetas_total += casetas
+    extras_total += extras
+    cruce_total += costo_cruce
+    costo_total_general += total_ruta:,.2f}
             """)
 
         utilidad_bruta = ingreso_total - costo_total_general
