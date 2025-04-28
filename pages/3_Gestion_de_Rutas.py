@@ -39,6 +39,18 @@ st.title("Gestión de Rutas Guardadas")
 
 # Archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
+RUTA_DATOS = "datos_generales.csv"
+
+# Función para cargar datos generales
+def cargar_datos_generales():
+    if os.path.exists(RUTA_DATOS):
+        return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
+    return {}
+
+datos_generales = cargar_datos_generales()
+
+tipo_cambio_usd = float(datos_generales.get("Tipo de cambio USD", 17.5))
+tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
@@ -82,11 +94,19 @@ if os.path.exists(RUTA_RUTAS):
         origen = st.text_input("Origen", value=ruta.get("Origen", ""))
         destino = st.text_input("Destino", value=ruta.get("Destino", ""))
         km = st.number_input("Kilómetros recorridos", min_value=0.0, value=float(ruta.get("KM", 0.0)))
+
         moneda = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda", "MXN")))
         ingreso_original = st.number_input(f"Ingreso Flete en {moneda}", min_value=0.0, value=float(ruta.get("Ingreso_Original", 0.0)))
+
         moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda_Cruce", "MXN")))
         ingreso_cruce = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0, value=float(ruta.get("Cruce_Original", 0.0)))
-        costo_cruce = st.number_input("Costo de Cruce", min_value=0.0, value=float(ruta.get("Costo_Cruce", 0.0)))
+
+        # 🔥 Recalcular automáticamente Costo de Cruce:
+        if moneda_cruce == "USD":
+            costo_cruce = ingreso_cruce * tipo_cambio_usd
+        else:
+            costo_cruce = ingreso_cruce * tipo_cambio_mxn
+
         casetas = st.number_input("Casetas", min_value=0.0, value=float(ruta.get("Casetas", 0.0)))
         horas_termo = st.number_input("Horas Termo", min_value=0.0, value=float(ruta.get("Horas_Termo", 0.0)))
         lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=float(ruta.get("Lavado_Termo", 0.0)))
