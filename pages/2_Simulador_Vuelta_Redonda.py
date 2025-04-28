@@ -136,7 +136,7 @@ if os.path.exists(RUTA_RUTAS):
     costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
     km_total += ruta["KM"]
 
-    # Aquí corregimos el ingreso
+    # Asegurar ingreso aunque no exista 'Ingreso_Total'
     if "Ingreso_Total" in ruta:
         ingreso_ruta = ruta["Ingreso_Total"]
     else:
@@ -153,31 +153,49 @@ if os.path.exists(RUTA_RUTAS):
     casetas_total += casetas
     extras_total += extras
     cruce_total += costo_cruce
-    costo_total_general += total_ruta:,.2f}
-            """)
+    costo_total_general += total_ruta
 
-        utilidad_bruta = ingreso_total - costo_total_general
-        estimado_costo_indirecto = ingreso_total * 0.35
-        utilidad_neta = utilidad_bruta - estimado_costo_indirecto
-        porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+    # Mostrar detalle de cada ruta
+    st.markdown(f"""
+    **{ruta['Tipo']} — {ruta['Cliente']} ➔ {ruta['Origen']} → {ruta['Destino']}**
+    - Moneda: {ruta.get('Moneda', 'MXN')}
+    - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
+    - Ingreso Convertido: ${ingreso_ruta:,.2f}
+    - Diesel Camión: ${costo_diesel_camion:,.2f}
+    - Diesel Termo: ${costo_diesel_termo:,.2f}
+    - Sueldo Operador: ${sueldo:,.2f}
+    - Bono ISR/IMSS: ${bono:,.2f}
+    - Casetas: ${casetas:,.2f}
+    - Extras: ${extras:,.2f}
+    - Costo Cruce: ${costo_cruce:,.2f}
+    - **Costo Total Ruta:** ${total_ruta:,.2f}
+    """)
 
-        st.subheader("📊 Resultado General")
-        st.success(f"Ingreso Total Vuelta Redonda: ${ingreso_total:,.2f}")
-        st.info(f"Costo Total Vuelta Redonda: ${costo_total_general:,.2f}")
-        st.success(f"Utilidad Bruta: ${utilidad_bruta:,.2f}")
-        st.info(f"Estimado Costo Indirecto (35%): ${estimado_costo_indirecto:,.2f}")
-        st.success(f"Utilidad Neta Estimada: ${utilidad_neta:,.2f}")
-        st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
+# Fin del FOR: Ahora sí, hacemos los totales generales
+utilidad_bruta = ingreso_total - costo_total_general
+estimado_costo_indirecto = ingreso_total * 0.35
+utilidad_neta = utilidad_bruta - estimado_costo_indirecto
+porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-        st.subheader("📋 Resumen de Gastos")
-        st.write(f"**Total Kilómetros Recorridos:** {km_total:,.2f} km")
-        st.write(f"**Total Diesel Camión:** ${diesel_camion_total:,.2f}")
-        st.write(f"**Total Diesel Termo:** ${diesel_termo_total:,.2f}")
-        st.write(f"**Total Sueldos Operador:** ${sueldo_total:,.2f}")
-        st.write(f"**Total Bono ISR/IMSS:** ${bono_total:,.2f}")
-        st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
-        st.write(f"**Total Extras:** ${extras_total:,.2f}")
-        st.write(f"**Total Costo Cruces:** ${cruce_total:,.2f}")
+# Mostrar resultados generales
+st.subheader("📊 Resultado General")
+st.success(f"Ingreso Total Vuelta Redonda: ${ingreso_total:,.2f}")
+st.info(f"Costo Total Vuelta Redonda: ${costo_total_general:,.2f}")
+st.success(f"Utilidad Bruta: ${utilidad_bruta:,.2f}")
+st.info(f"Estimado Costo Indirecto (35%): ${estimado_costo_indirecto:,.2f}")
+st.success(f"Utilidad Neta Estimada: ${utilidad_neta:,.2f}")
+st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
+
+# Mostrar resumen de gastos
+st.subheader("📋 Resumen de Gastos")
+st.write(f"**Total Kilómetros Recorridos:** {km_total:,.2f} km")
+st.write(f"**Total Diesel Camión:** ${diesel_camion_total:,.2f}")
+st.write(f"**Total Diesel Termo:** ${diesel_termo_total:,.2f}")
+st.write(f"**Total Sueldos Operador:** ${sueldo_total:,.2f}")
+st.write(f"**Total Bono ISR/IMSS:** ${bono_total:,.2f}")
+st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
+st.write(f"**Total Extras:** ${extras_total:,.2f}")
+st.write(f"**Total Costo Cruces:** ${cruce_total:,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
