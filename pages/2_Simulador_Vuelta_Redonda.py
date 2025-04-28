@@ -190,6 +190,16 @@ if os.path.exists(RUTA_RUTAS):
         st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
         st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
         st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
+        
+        st.subheader("📋 Resumen de Gastos")
+        st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
+        st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
+        st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
+        st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
+        st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
+        st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
+        st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
+        st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
