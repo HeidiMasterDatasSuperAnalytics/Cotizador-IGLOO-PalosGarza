@@ -38,7 +38,7 @@ st.markdown(f"""
 # Título
 st.title("Gestión de Rutas Guardadas")
 
-# Rutas de los archivos
+# Rutas de archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
@@ -65,21 +65,24 @@ if os.path.exists(RUTA_RUTAS):
         if "Precio_Diesel" not in df.columns:
             df.insert(df.columns.get_loc("Costo_Diesel"), "Precio_Diesel", precio_diesel)
 
-    # Reubicar columnas Moneda y Tipo Cambio
-    moneda = df.pop("Moneda")
-    tipo_cambio = df.pop("Tipo_Cambio")
-    df.insert(df.columns.get_loc("Destino") + 1, "Moneda", moneda)
-    df.insert(df.columns.get_loc("Moneda") + 1, "Tipo_Cambio", tipo_cambio)
+    # Reubicar columnas de Moneda
+    if "Moneda" in df.columns and "Tipo_Cambio" in df.columns:
+        moneda = df.pop("Moneda")
+        tipo_cambio = df.pop("Tipo_Cambio")
+        df.insert(df.columns.get_loc("Destino") + 1, "Moneda", moneda)
+        df.insert(df.columns.get_loc("Moneda") + 1, "Tipo_Cambio", tipo_cambio)
 
-    # Reubicar columnas de Cruce
-    moneda_cruce = df.pop("Moneda_Cruce")
-    tipo_cambio_cruce = df.pop("Tipo_Cambio_Cruce")
-    cruce_original = df.pop("Cruce_Original")
-    cruce_total = df.pop("Cruce_Total")
-    df.insert(df.columns.get_loc("Ingreso_Total") + 1, "Moneda_Cruce", moneda_cruce)
-    df.insert(df.columns.get_loc("Moneda_Cruce") + 1, "Tipo_Cambio_Cruce", tipo_cambio_cruce)
-    df.insert(df.columns.get_loc("Tipo_Cambio_Cruce") + 1, "Cruce_Original", cruce_original)
-    df.insert(df.columns.get_loc("Cruce_Original") + 1, "Cruce_Total", cruce_total)
+    # Reubicar columnas de Cruce SI EXISTEN
+    if all(col in df.columns for col in ["Moneda_Cruce", "Tipo_Cambio_Cruce", "Cruce_Original", "Cruce_Total"]):
+        moneda_cruce = df.pop("Moneda_Cruce")
+        tipo_cambio_cruce = df.pop("Tipo_Cambio_Cruce")
+        cruce_original = df.pop("Cruce_Original")
+        cruce_total = df.pop("Cruce_Total")
+
+        df.insert(df.columns.get_loc("Ingreso_Total") + 1, "Moneda_Cruce", moneda_cruce)
+        df.insert(df.columns.get_loc("Moneda_Cruce") + 1, "Tipo_Cambio_Cruce", tipo_cambio_cruce)
+        df.insert(df.columns.get_loc("Tipo_Cambio_Cruce") + 1, "Cruce_Original", cruce_original)
+        df.insert(df.columns.get_loc("Cruce_Original") + 1, "Cruce_Total", cruce_total)
 
     # Mostrar tabla
     st.dataframe(df, use_container_width=True)
@@ -103,7 +106,6 @@ if os.path.exists(RUTA_RUTAS):
 
         st.markdown("### Edita los valores:")
 
-        # Capturar valores
         tipo = st.selectbox("Tipo", ["IMPO", "EXPO", "VACIO"], index=["IMPO", "EXPO", "VACIO"].index(ruta["Tipo"]))
         cliente = st.text_input("Cliente", value=ruta["Cliente"])
         origen = st.text_input("Origen", value=ruta["Origen"])
