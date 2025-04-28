@@ -19,9 +19,9 @@ logo_oscuro = Image.open("Igloo White.png")
 logo_claro_b64 = image_to_base64(logo_claro)
 logo_oscuro_b64 = image_to_base64(logo_oscuro)
 
-# Mostrar logo en esquina superior izquierda
+# Mostrar logo (no sobre el texto)
 st.markdown(f"""
-    <div style='position: absolute; top: 10px; left: 10px;'>
+    <div style='text-align: left; margin-bottom: 10px;'>
         <img src="data:image/png;base64,{logo_claro_b64}" class="logo-light" style="height:50px;">
         <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-dark" style="height:50px;">
     </div>
@@ -104,4 +104,4 @@ if submitted:
     df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
     df_rutas.to_csv(RUTA_RUTAS, index=False)
     st.success("✅ La ruta se guardó exitosamente.")
-    st.rerun()  # <-- ahora corregido
+    st.rerun()
