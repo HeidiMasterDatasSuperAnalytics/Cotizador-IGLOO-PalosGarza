@@ -37,18 +37,21 @@ st.markdown(f"""
 
 st.title("Gestión de Rutas Guardadas")
 
-# Rutas de archivos
+# Archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
-RUTA_DATOS = "datos_generales.csv"
 
-def cargar_datos_generales():
-    if os.path.exists(RUTA_DATOS):
-        return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
-    return {}
-
-# Cargar rutas
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
+
+    # Ordenar columnas si existen
+    columnas_ordenadas = [
+        "Fecha", "Tipo", "Cliente", "Origen", "Destino", "KM",
+        "Moneda", "Ingreso_Original", "Moneda_Cruce", "Cruce_Original", "Costo_Cruce",
+        "Casetas", "Horas_Termo", "Lavado_Termo", "Movimiento_Local",
+        "Puntualidad", "Pension", "Estancia", "Fianza_Termo", "Renta_Termo"
+    ]
+    columnas_disponibles = [col for col in columnas_ordenadas if col in df.columns]
+    df = df[columnas_disponibles]
 
     st.subheader("📋 Rutas capturadas:")
     st.dataframe(df, use_container_width=True)
@@ -64,41 +67,46 @@ if os.path.exists(RUTA_RUTAS):
         st.success("✅ Rutas eliminadas correctamente.")
         st.rerun()
 
-    # 🟡 Descargar respaldo
-    st.subheader("📥 Descargar respaldo de datos")
-    st.download_button(
-        label="Descargar rutas_guardadas.csv",
-        data=df.to_csv(index=False),
-        file_name="rutas_guardadas.csv",
-        mime="text/csv"
-    )
+    # 🟡 Editar rutas
+    st.subheader("Editar ruta existente")
+    indice_editar = st.selectbox("Selecciona el índice a editar", df.index.tolist())
 
-    if os.path.exists(RUTA_DATOS):
-        datos_generales = pd.read_csv(RUTA_DATOS)
-        st.download_button(
-            label="Descargar datos_generales.csv",
-            data=datos_generales.to_csv(index=False),
-            file_name="datos_generales.csv",
-            mime="text/csv"
-        )
+    if indice_editar is not None:
+        ruta = df.loc[indice_editar]
 
-    # 🟢 Restaurar desde respaldo
-    st.subheader("📤 Subir archivos para restaurar datos")
-    
-    rutas_file = st.file_uploader("Subir rutas_guardadas.csv", type="csv")
-    if rutas_file:
-        rutas_df = pd.read_csv(rutas_file)
-        rutas_df.to_csv(RUTA_RUTAS, index=False)
-        st.success("✅ Rutas restauradas correctamente.")
-        st.rerun()
+        st.markdown("### Modifica los valores:")
 
-    datos_file = st.file_uploader("Subir datos_generales.csv", type="csv")
-    if datos_file:
-        datos_df = pd.read_csv(datos_file)
-        datos_df.to_csv(RUTA_DATOS, index=False)
-        st.success("✅ Datos generales restaurados correctamente.")
-        st.rerun()
+        fecha = st.date_input("Fecha de captura", pd.to_datetime(ruta["Fecha"]))
+        tipo = st.selectbox("Tipo", ["IMPO", "EXPO", "VACIO"], index=["IMPO", "EXPO", "VACIO"].index(ruta["Tipo"]))
+        cliente = st.text_input("Cliente", value=ruta["Cliente"])
+        origen = st.text_input("Origen", value=ruta["Origen"])
+        destino = st.text_input("Destino", value=ruta["Destino"])
+        km = st.number_input("Kilómetros recorridos", min_value=0.0, value=float(ruta["KM"]))
+        moneda = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda"]))
+        ingreso_original = st.number_input(f"Ingreso Flete en {moneda}", min_value=0.0, value=float(ruta["Ingreso_Original"]))
+        moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda_Cruce"]))
+        ingreso_cruce = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0, value=float(ruta["Cruce_Original"]))
+        costo_cruce = st.number_input("Costo de Cruce", min_value=0.0, value=float(ruta["Costo_Cruce"]))
+        casetas = st.number_input("Casetas", min_value=0.0, value=float(ruta["Casetas"]))
+        horas_termo = st.number_input("Horas Termo", min_value=0.0, value=float(ruta["Horas_Termo"]))
+        lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=float(ruta["Lavado_Termo"]))
+        movimiento_local = st.number_input("Movimiento Local", min_value=0.0, value=float(ruta["Movimiento_Local"]))
+        puntualidad = st.number_input("Puntualidad", min_value=0.0, value=float(ruta["Puntualidad"]))
+        pension = st.number_input("Pensión", min_value=0.0, value=float(ruta["Pension"]))
+        estancia = st.number_input("Estancia", min_value=0.0, value=float(ruta["Estancia"]))
+        fianza_termo = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0, value=float(ruta["Fianza_Termo"]))
+        renta_termo = st.number_input("Renta Termo", min_value=0.0, value=float(ruta["Renta_Termo"]))
+
+        if st.button("Guardar cambios en la ruta"):
+            df.loc[indice_editar, columnas_disponibles] = [
+                fecha, tipo, cliente, origen, destino, km,
+                moneda, ingreso_original, moneda_cruce, ingreso_cruce, costo_cruce,
+                casetas, horas_termo, lavado_termo, movimiento_local,
+                puntualidad, pension, estancia, fianza_termo, renta_termo
+            ]
+            df.to_csv(RUTA_RUTAS, index=False)
+            st.success("✅ Ruta actualizada correctamente.")
+            st.rerun()
 
 else:
     st.warning("No hay rutas capturadas todavía.")
-
