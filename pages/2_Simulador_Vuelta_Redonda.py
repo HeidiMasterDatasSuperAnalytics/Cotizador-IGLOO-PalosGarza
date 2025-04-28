@@ -58,11 +58,9 @@ def calcular_costos(ruta, datos):
     rendimiento_termo = float(datos.get("Rendimiento Termo", 3.0))
     bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
 
-    # Cálculos de diesel
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
     costo_diesel_termo = (horas_termo / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
 
-    # Sueldo operador
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
         bono = bono_isr_imss
@@ -73,7 +71,6 @@ def calcular_costos(ruta, datos):
         sueldo = float(datos.get("Pago fijo VACIO", 200))
         bono = 0
 
-    # Costos extra
     casetas = ruta.get("Casetas", 0)
     extras = sum([
         ruta.get("Lavado_Termo", 0),
@@ -84,11 +81,8 @@ def calcular_costos(ruta, datos):
         ruta.get("Fianza_Termo", 0),
         ruta.get("Renta_Termo", 0)
     ])
-
-    # Costo del cruce
     costo_cruce = ruta.get("Costo_Cruce", 0)
 
-    # Costo total
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce
 
     return costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, costo_total
@@ -104,8 +98,18 @@ if os.path.exists(RUTA_RUTAS):
 
     st.subheader("Selecciona rutas para simular")
 
-    impo_sel = st.selectbox("Ruta de Importación", impo_rutas.index.tolist(), format_func=lambda x: f"{impo_rutas.loc[x, 'Origen']} → {impo_rutas.loc[x, 'Destino']}")
-    expo_sel = st.selectbox("Ruta de Exportación", expo_rutas.index.tolist(), format_func=lambda x: f"{expo_rutas.loc[x, 'Origen']} → {expo_rutas.loc[x, 'Destino']}")
+    # Nuevos filtros por cliente
+    clientes_impo = impo_rutas["Cliente"].dropna().unique()
+    clientes_expo = expo_rutas["Cliente"].dropna().unique()
+
+    cliente_impo = st.selectbox("Selecciona Cliente de Importación", clientes_impo)
+    rutas_impo_filtradas = impo_rutas[impo_rutas["Cliente"] == cliente_impo]
+    impo_sel = st.selectbox("Ruta de Importación", rutas_impo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_impo_filtradas.loc[x, 'Origen']} → {rutas_impo_filtradas.loc[x, 'Destino']}")
+
+    cliente_expo = st.selectbox("Selecciona Cliente de Exportación", clientes_expo)
+    rutas_expo_filtradas = expo_rutas[expo_rutas["Cliente"] == cliente_expo]
+    expo_sel = st.selectbox("Ruta de Exportación", rutas_expo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_expo_filtradas.loc[x, 'Origen']} → {rutas_expo_filtradas.loc[x, 'Destino']}")
+
     usar_vacio = st.checkbox("¿Agregar ruta VACÍA entre IMPO y EXPO?")
 
     if usar_vacio and not vacio_rutas.empty:
@@ -114,21 +118,12 @@ if os.path.exists(RUTA_RUTAS):
         vacio_sel = None
 
     if st.button("Simular Vuelta Redonda"):
-        rutas = [impo_rutas.loc[impo_sel]]
+        rutas = [rutas_impo_filtradas.loc[impo_sel]]
         if vacio_sel is not None:
             rutas.append(vacio_rutas.loc[vacio_sel])
-        rutas.append(expo_rutas.loc[expo_sel])
+        rutas.append(rutas_expo_filtradas.loc[expo_sel])
 
-        km_total = 0
-        ingreso_total = 0
-        diesel_camion_total = 0
-        diesel_termo_total = 0
-        sueldo_total = 0
-        bono_total = 0
-        casetas_total = 0
-        extras_total = 0
-        cruce_total = 0
-        costo_total_general = 0
+        km_total = ingreso_total = diesel_camion_total = diesel_termo_total = sueldo_total = bono_total = casetas_total = extras_total = cruce_total = costo_total_general = 0
 
         st.subheader("🧾 Detalle por Ruta")
 
@@ -146,7 +141,7 @@ if os.path.exists(RUTA_RUTAS):
             costo_total_general += total_ruta
 
             st.markdown(f"""
-            **{ruta['Tipo']} — {ruta['Origen']} → {ruta['Destino']}**
+            **{ruta['Tipo']} — {ruta['Origen']} → {ruta['Destino']} ({ruta['Cliente']})**
             - Moneda: {ruta.get('Moneda', 'MXN')}
             - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
             - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
@@ -185,3 +180,4 @@ if os.path.exists(RUTA_RUTAS):
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
+
