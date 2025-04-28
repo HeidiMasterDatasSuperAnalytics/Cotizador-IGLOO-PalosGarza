@@ -189,7 +189,13 @@ if os.path.exists(RUTA_RUTAS):
         st.markdown(f"Utilidad Bruta: {color_value(utilidad_bruta)}", unsafe_allow_html=True)
         st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
         st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
-        st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
+
+        color_utilidad = "green" if porcentaje_utilidad_neta >= 0 else "red"
+        st.markdown(f"""
+        <div style='background-color: #e6f0fa; padding: 10px; border-radius: 10px;'>
+            <span style='color:{color_utilidad}; font-weight:bold;'>% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%</span>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.subheader("📋 Resumen de Gastos")
         st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
