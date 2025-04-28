@@ -118,10 +118,11 @@ if os.path.exists(RUTA_RUTAS):
         vacio_sel = None
 
     if st.button("Simular Vuelta Redonda"):
-        rutas = [rutas_impo_filtradas.loc[impo_sel]]
-        if vacio_sel is not None:
-            rutas.append(vacio_rutas.loc[vacio_sel])
-        rutas.append(rutas_expo_filtradas.loc[expo_sel])
+       rutas = []
+rutas.append(rutas_impo_filtradas.loc[[impo_sel]].squeeze())  # Forzamos Series
+if vacio_sel is not None:
+    rutas.append(vacio_rutas.loc[[vacio_sel]].squeeze())
+rutas.append(rutas_expo_filtradas.loc[[expo_sel]].squeeze())
 
         km_total = ingreso_total = diesel_camion_total = diesel_termo_total = sueldo_total = bono_total = casetas_total = extras_total = cruce_total = costo_total_general = 0
 
