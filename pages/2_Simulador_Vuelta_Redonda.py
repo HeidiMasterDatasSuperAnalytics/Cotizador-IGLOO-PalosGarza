@@ -16,9 +16,12 @@ def image_to_base64(img):
 def safe_number(x):
     return 0 if (x is None or (isinstance(x, float) and math.isnan(x))) else x
 
-# Función para aplicar color a valores positivos o negativos
-def color_value(value):
-    color = "green" if value >= 0 else "red"
+# Función para aplicar color azul o verde/rojo dependiendo del valor
+def color_value(value, tipo="resultado"):
+    if tipo == "resultado":
+        color = "green" if value >= 0 else "red"
+    else:
+        color = "blue"
     return f"<span style='color:{color}; font-weight:bold;'>${value:,.2f}</span>"
 
 # Cargar logos
@@ -51,13 +54,11 @@ st.title("Simulador de Vuelta Redonda")
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
-# Función para cargar datos generales
 def load_datos_generales():
     if os.path.exists(RUTA_DATOS):
         return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
     return {}
 
-# Función de cálculo de costos
 def calcular_costos(ruta, datos):
     tipo = ruta["Tipo"]
     km = ruta["KM"]
@@ -97,7 +98,6 @@ def calcular_costos(ruta, datos):
 
     return costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, costo_total
 
-# Simulación
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
     datos = load_datos_generales()
@@ -184,22 +184,12 @@ if os.path.exists(RUTA_RUTAS):
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.subheader("📊 Resultado General")
-        st.markdown(f"Ingreso Total Vuelta Redonda: {color_value(ingreso_total)}", unsafe_allow_html=True)
-        st.markdown(f"Costo Total Vuelta Redonda: {color_value(costo_total_general)}", unsafe_allow_html=True)
+        st.markdown(f"Ingreso Total Vuelta Redonda: {color_value(ingreso_total, tipo='ingreso')}", unsafe_allow_html=True)
+        st.markdown(f"Costo Total Vuelta Redonda: {color_value(costo_total_general, tipo='ingreso')}", unsafe_allow_html=True)
         st.markdown(f"Utilidad Bruta: {color_value(utilidad_bruta)}", unsafe_allow_html=True)
         st.markdown(f"Estimado Costo Indirecto (35%): {color_value(estimado_costo_indirecto)}", unsafe_allow_html=True)
         st.markdown(f"Utilidad Neta Estimada: {color_value(utilidad_neta)}", unsafe_allow_html=True)
         st.info(f"% Utilidad Neta: {porcentaje_utilidad_neta:.2f}%")
-
-        st.subheader("📋 Resumen de Gastos")
-        st.write(f"**Total Kilómetros Recorridos:** {safe_number(km_total):,.2f} km")
-        st.write(f"**Total Diesel Camión:** ${safe_number(diesel_camion_total):,.2f}")
-        st.write(f"**Total Diesel Termo:** ${safe_number(diesel_termo_total):,.2f}")
-        st.write(f"**Total Sueldos Operador:** ${safe_number(sueldo_total):,.2f}")
-        st.write(f"**Total Bono ISR/IMSS:** ${safe_number(bono_total):,.2f}")
-        st.write(f"**Total Casetas:** ${safe_number(casetas_total):,.2f}")
-        st.write(f"**Total Extras:** ${safe_number(extras_total):,.2f}")
-        st.write(f"**Total Costo Cruces:** ${safe_number(cruce_total):,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
