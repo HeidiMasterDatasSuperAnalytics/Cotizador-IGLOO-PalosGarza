@@ -16,30 +16,31 @@ def calcular_costos(ruta, datos):
     tipo = ruta["Tipo"]
     km = ruta["KM"]
     horas_termo = ruta.get("Horas_Termo", 0)
-    diesel = float(datos.get("Costo Diesel", 24))
-    rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
 
-    # Costo Diesel Camión
+    # Cargar datos generales
+    diesel = float(datos.get("Costo Diesel", 24))  # Precio del Diesel
+    rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))  # Rendimiento del camión
+    rendimiento_termo = float(datos.get("Rendimiento Termo", 3.0))  # Rendimiento del termo
+    bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))  # Bono, si existe
+
+    # 🔹 Costo Diesel Camión
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
 
-    # Costo Diesel Termo
-    costo_diesel_termo = horas_termo * diesel
+    # 🔹 Costo Diesel Termo
+    costo_diesel_termo = (horas_termo / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
 
-    # Sueldo operador
+    # 🔹 Sueldo Operador
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
+        bono = bono_isr_imss
     elif tipo == "EXPO":
         sueldo = km * float(datos.get("Pago x km EXPO", 2.5))
-    else:
+        bono = bono_isr_imss
+    else:  # VACÍO
         sueldo = float(datos.get("Pago fijo VACIO", 200))
+        bono = 0  # No aplica bono ISR/IMSS para vacíos
 
-    # Bono ISR IMSS (solo para IMPO y EXPO)
-    if tipo in ["IMPO", "EXPO"]:
-        bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
-    else:
-        bono_isr_imss = 0
-
-    # Costos adicionales
+    # 🔹 Costos adicionales
     casetas = ruta.get("Casetas", 0)
     extras = sum([
         ruta.get("Lavado_Termo", 0),
@@ -51,11 +52,14 @@ def calcular_costos(ruta, datos):
         ruta.get("Renta_Termo", 0)
     ])
 
+    # 🔹 Costo de cruce
     cruce = ruta.get("Cruce_Total", 0)
 
-    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono_isr_imss + casetas + extras + cruce
+    # 🔹 Costo total de la ruta
+    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + cruce
 
-    return costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, costo_total
+    # 🔹 Retornar todos los costos individuales para el resumen
+    return costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, cruce, costo_total
 
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
