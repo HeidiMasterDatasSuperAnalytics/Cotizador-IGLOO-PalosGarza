@@ -86,7 +86,7 @@ if os.path.exists(RUTA_RUTAS):
         ingreso_original = st.number_input(f"Ingreso Flete en {moneda}", min_value=0.0, value=float(ruta["Ingreso_Original"]))
         moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta["Moneda_Cruce"]))
         ingreso_cruce = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0, value=float(ruta["Cruce_Original"]))
-        costo_cruce = st.number_input("Costo de Cruce", min_value=0.0, value=float(ruta["Costo_Cruce"]))
+        costo_cruce = st.number_input("Costo de Cruce", min_value=0.0, value=float(ruta.get("Costo_Cruce", 0.0)))
         casetas = st.number_input("Casetas", min_value=0.0, value=float(ruta["Casetas"]))
         horas_termo = st.number_input("Horas Termo", min_value=0.0, value=float(ruta["Horas_Termo"]))
         lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=float(ruta["Lavado_Termo"]))
