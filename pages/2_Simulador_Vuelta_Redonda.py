@@ -1,46 +1,79 @@
 import streamlit as st
 import pandas as pd
 import os
+from PIL import Image
+import base64
+from io import BytesIO
+
+# Función para convertir imagen en base64
+def image_to_base64(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode()
+
+# Cargar logos
+logo_claro = Image.open("Igloo Original.png")
+logo_oscuro = Image.open("Igloo White.png")
+logo_claro_b64 = image_to_base64(logo_claro)
+logo_oscuro_b64 = image_to_base64(logo_oscuro)
+
+# Mostrar logo
+st.markdown(f"""
+    <div style='text-align: left; margin-bottom: 10px;'>
+        <img src="data:image/png;base64,{logo_claro_b64}" class="logo-light" style="height:50px;">
+        <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-dark" style="height:50px;">
+    </div>
+    <style>
+    @media (prefers-color-scheme: dark) {{
+        .logo-light {{ display: none; }}
+        .logo-dark {{ display: inline; }}
+    }}
+    @media (prefers-color-scheme: light) {{
+        .logo-light {{ display: inline; }}
+        .logo-dark {{ display: none; }}
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("Simulador de Vuelta Redonda")
 
+# Rutas
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
+# Función para cargar datos generales
 def load_datos_generales():
     if os.path.exists(RUTA_DATOS):
         return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
     return {}
 
+# Función de cálculo de costos
 def calcular_costos(ruta, datos):
     tipo = ruta["Tipo"]
     km = ruta["KM"]
     horas_termo = ruta.get("Horas_Termo", 0)
 
-    # Cargar datos generales
-    diesel = float(datos.get("Costo Diesel", 24))  # Precio del Diesel
-    rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))  # Rendimiento del camión
-    rendimiento_termo = float(datos.get("Rendimiento Termo", 3.0))  # Rendimiento del termo
-    bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))  # Bono, si existe
+    diesel = float(datos.get("Costo Diesel", 24))
+    rendimiento_camion = float(datos.get("Rendimiento Camion", 2.5))
+    rendimiento_termo = float(datos.get("Rendimiento Termo", 3.0))
+    bono_isr_imss = float(datos.get("Bono ISR IMSS", 0))
 
-    # 🔹 Costo Diesel Camión
+    # Cálculos de diesel
     costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
-
-    # 🔹 Costo Diesel Termo
     costo_diesel_termo = (horas_termo / rendimiento_termo) * diesel if rendimiento_termo > 0 else 0
 
-    # 🔹 Sueldo Operador
+    # Sueldo operador
     if tipo == "IMPO":
         sueldo = km * float(datos.get("Pago x km IMPO", 2.1))
         bono = bono_isr_imss
     elif tipo == "EXPO":
         sueldo = km * float(datos.get("Pago x km EXPO", 2.5))
         bono = bono_isr_imss
-    else:  # VACÍO
+    else:
         sueldo = float(datos.get("Pago fijo VACIO", 200))
-        bono = 0  # No aplica bono ISR/IMSS para vacíos
+        bono = 0
 
-    # 🔹 Costos adicionales
+    # Costos extra
     casetas = ruta.get("Casetas", 0)
     extras = sum([
         ruta.get("Lavado_Termo", 0),
@@ -52,15 +85,15 @@ def calcular_costos(ruta, datos):
         ruta.get("Renta_Termo", 0)
     ])
 
-    # 🔹 Costo de cruce
-    cruce = ruta.get("Cruce_Total", 0)
+    # Costo del cruce
+    costo_cruce = ruta.get("Costo_Cruce", 0)
 
-    # 🔹 Costo total de la ruta
-    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + cruce
+    # Costo total
+    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce
 
-    # 🔹 Retornar todos los costos individuales para el resumen
-    return costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, cruce, costo_total
+    return costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, costo_total
 
+# Simulación
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
     datos = load_datos_generales()
@@ -100,16 +133,16 @@ if os.path.exists(RUTA_RUTAS):
         st.subheader("🧾 Detalle por Ruta")
 
         for ruta in rutas:
-            costo_diesel_camion, costo_diesel_termo, sueldo, bono_isr_imss, casetas, extras, cruce, total_ruta = calcular_costos(ruta, datos)
+            costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
             km_total += ruta["KM"]
             ingreso_total += ruta["Ingreso_Total"]
             diesel_camion_total += costo_diesel_camion
             diesel_termo_total += costo_diesel_termo
             sueldo_total += sueldo
-            bono_total += bono_isr_imss
+            bono_total += bono
             casetas_total += casetas
             extras_total += extras
-            cruce_total += cruce
+            cruce_total += costo_cruce
             costo_total_general += total_ruta
 
             st.markdown(f"""
@@ -119,11 +152,11 @@ if os.path.exists(RUTA_RUTAS):
             - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
             - Diesel Camión: ${costo_diesel_camion:,.2f}
             - Diesel Termo: ${costo_diesel_termo:,.2f}
-            - Sueldo operador: ${sueldo:,.2f}
-            - Bono ISR/IMSS: ${bono_isr_imss:,.2f}
+            - Sueldo Operador: ${sueldo:,.2f}
+            - Bono ISR/IMSS: ${bono:,.2f}
             - Casetas: ${casetas:,.2f}
             - Extras: ${extras:,.2f}
-            - Cruce: ${cruce:,.2f}
+            - Costo Cruce: ${costo_cruce:,.2f}
             - **Costo Total Ruta:** ${total_ruta:,.2f}
             """)
 
@@ -148,8 +181,7 @@ if os.path.exists(RUTA_RUTAS):
         st.write(f"**Total Bono ISR/IMSS:** ${bono_total:,.2f}")
         st.write(f"**Total Casetas:** ${casetas_total:,.2f}")
         st.write(f"**Total Extras:** ${extras_total:,.2f}")
-        st.write(f"**Total Cruces:** ${cruce_total:,.2f}")
+        st.write(f"**Total Costo Cruces:** ${cruce_total:,.2f}")
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
-
