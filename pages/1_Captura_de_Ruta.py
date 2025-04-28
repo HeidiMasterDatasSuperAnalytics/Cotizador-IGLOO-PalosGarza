@@ -14,12 +14,10 @@ def image_to_base64(img):
 # Cargar imágenes
 logo_claro = Image.open("Igloo Original.png")
 logo_oscuro = Image.open("Igloo White.png")
-
-# Convertir a base64
 logo_claro_b64 = image_to_base64(logo_claro)
 logo_oscuro_b64 = image_to_base64(logo_oscuro)
 
-# Mostrar logo (no sobre el texto)
+# Mostrar logo arriba a la izquierda
 st.markdown(f"""
     <div style='text-align: left; margin-bottom: 10px;'>
         <img src="data:image/png;base64,{logo_claro_b64}" class="logo-light" style="height:50px;">
@@ -37,19 +35,30 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Título principal
 st.title("Captura de Ruta")
 
-# Ruta donde guardamos
+# Ruta de los archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
+RUTA_DATOS = "datos_generales.csv"
 
-# Si ya existe cargamos, si no creamos vacío
+# Cargar datos generales
+def cargar_datos_generales():
+    if os.path.exists(RUTA_DATOS):
+        return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
+    return {}
+
+datos_generales = cargar_datos_generales()
+
+tipo_cambio_usd = float(datos_generales.get("Tipo de cambio USD", 17.5))
+tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
+
+# Cargar rutas guardadas
 if os.path.exists(RUTA_RUTAS):
     df_rutas = pd.read_csv(RUTA_RUTAS)
 else:
     df_rutas = pd.DataFrame()
 
-# Formulario
+# Formulario de captura
 with st.form("captura_ruta"):
     fecha = st.date_input("Fecha de captura")
     tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
@@ -66,7 +75,6 @@ with st.form("captura_ruta"):
 
     casetas = st.number_input("Costo de Casetas", min_value=0.0)
     horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
-
     lavado_termo = st.number_input("Lavado Termo", min_value=0.0)
     movimiento_local = st.number_input("Movimiento Local", min_value=0.0)
     puntualidad = st.number_input("Puntualidad", min_value=0.0)
@@ -77,31 +85,36 @@ with st.form("captura_ruta"):
 
     submitted = st.form_submit_button("Guardar Ruta")
 
-# Acción al guardar
-if submitted:
-    nueva_ruta = {
-        "Fecha": fecha,
-        "Tipo": tipo,
-        "Cliente": cliente,
-        "Origen": origen,
-        "Destino": destino,
-        "KM": km,
-        "Moneda": moneda_ingreso,
-        "Ingreso_Original": ingreso_flete,
-        "Moneda_Cruce": moneda_cruce,
-        "Cruce_Original": ingreso_cruce,
-        "Casetas": casetas,
-        "Horas_Termo": horas_termo,
-        "Lavado_Termo": lavado_termo,
-        "Movimiento_Local": movimiento_local,
-        "Puntualidad": puntualidad,
-        "Pension": pension,
-        "Estancia": estancia,
-        "Fianza_Termo": fianza_termo,
-        "Renta_Termo": renta_termo
-    }
+    if submitted:
+        tipo_cambio_cruce = tipo_cambio_usd if moneda_cruce == "USD" else tipo_cambio_mxn
 
-    df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
-    df_rutas.to_csv(RUTA_RUTAS, index=False)
-    st.success("✅ La ruta se guardó exitosamente.")
-    st.rerun()
+        # Calcular Costo de Cruce automáticamente
+        costo_cruce = ingreso_cruce * tipo_cambio_cruce if moneda_cruce == "USD" else ingreso_cruce
+
+        nueva_ruta = {
+            "Fecha": fecha,
+            "Tipo": tipo,
+            "Cliente": cliente,
+            "Origen": origen,
+            "Destino": destino,
+            "KM": km,
+            "Moneda": moneda_ingreso,
+            "Ingreso_Original": ingreso_flete,
+            "Moneda_Cruce": moneda_cruce,
+            "Cruce_Original": ingreso_cruce,
+            "Costo_Cruce": costo_cruce,  # Nuevo campo calculado
+            "Casetas": casetas,
+            "Horas_Termo": horas_termo,
+            "Lavado_Termo": lavado_termo,
+            "Movimiento_Local": movimiento_local,
+            "Puntualidad": puntualidad,
+            "Pension": pension,
+            "Estancia": estancia,
+            "Fianza_Termo": fianza_termo,
+            "Renta_Termo": renta_termo
+        }
+
+        df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
+        df_rutas.to_csv(RUTA_RUTAS, index=False)
+        st.success("✅ La ruta se guardó exitosamente.")
+        st.rerun()
