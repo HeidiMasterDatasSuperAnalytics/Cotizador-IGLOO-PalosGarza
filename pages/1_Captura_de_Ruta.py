@@ -53,32 +53,30 @@ with st.form("Captura de Ruta"):
 
     submitted = st.form_submit_button("Guardar Ruta")
 
-    if submitted:
-        nueva_ruta = {
-            "Fecha": fecha,
-            "Tipo": tipo,
-            "Cliente": cliente,
-            "Origen": origen,
-            "Destino": destino,
-            "KM": km,
-            "Moneda": moneda_ingreso,
-            "Ingreso_Original": ingreso_flete,
-            "Moneda_Cruce": moneda_cruce,
-            "Cruce_Original": ingreso_cruce,
-            "Casetas": casetas,
-            "Horas_Termo": horas_termo,
-            "Lavado_Termo": lavado_termo,
-            "Movimiento_Local": movimiento_local,
-            "Puntualidad": puntualidad,
-            "Pension": pension,
-            "Estancia": estancia,
-            "Fianza_Termo": fianza_termo,
-            "Renta_Termo": renta_termo
-        }
+   if submitted:
+    nueva_ruta = {
+        "Fecha": fecha,
+        "Tipo": tipo,
+        "Cliente": cliente,
+        "Origen": origen,
+        "Destino": destino,
+        "KM": km,
+        "Moneda": moneda_ingreso,
+        "Ingreso_Original": ingreso_flete,
+        "Moneda_Cruce": moneda_cruce,
+        "Cruce_Original": ingreso_cruce,
+        "Casetas": casetas,
+        "Horas_Termo": horas_termo,
+        "Lavado_Termo": lavado_termo,
+        "Movimiento_Local": movimiento_local,
+        "Puntualidad": puntualidad,
+        "Pension": pension,
+        "Estancia": estancia,
+        "Fianza_Termo": fianza_termo,
+        "Renta_Termo": renta_termo
+    }
 
-        df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
-        df_rutas.to_csv(RUTA_RUTAS, index=False)
-        st.success("✅ La ruta se guardó exitosamente.")
-        st.experimental_rerun()
-
-
+    df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
+    df_rutas.to_csv(RUTA_RUTAS, index=False)
+    st.success("✅ La ruta se guardó exitosamente.")
+    st.rerun()   # <--- actualizado aquí
