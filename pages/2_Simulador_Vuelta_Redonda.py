@@ -102,13 +102,17 @@ if os.path.exists(RUTA_RUTAS):
     clientes_impo = impo_rutas["Cliente"].dropna().unique()
     clientes_expo = expo_rutas["Cliente"].dropna().unique()
 
-    cliente_impo = st.selectbox("Selecciona Cliente de Importación", clientes_impo)
-    rutas_impo_filtradas = impo_rutas[impo_rutas["Cliente"] == cliente_impo]
-    impo_sel = st.selectbox("Ruta de Importación", rutas_impo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_impo_filtradas.loc[x, 'Origen']} → {rutas_impo_filtradas.loc[x, 'Destino']}")
+    col1, col2 = st.columns(2)
 
-    cliente_expo = st.selectbox("Selecciona Cliente de Exportación", clientes_expo)
-    rutas_expo_filtradas = expo_rutas[expo_rutas["Cliente"] == cliente_expo]
-    expo_sel = st.selectbox("Ruta de Exportación", rutas_expo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_expo_filtradas.loc[x, 'Origen']} → {rutas_expo_filtradas.loc[x, 'Destino']}")
+    with col1:
+        cliente_impo = st.selectbox("Cliente Importación", clientes_impo)
+        rutas_impo_filtradas = impo_rutas[impo_rutas["Cliente"] == cliente_impo]
+        impo_sel = st.selectbox("Ruta Importación", rutas_impo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_impo_filtradas.loc[x, 'Cliente']} ➔ {rutas_impo_filtradas.loc[x, 'Origen']} → {rutas_impo_filtradas.loc[x, 'Destino']}")
+
+    with col2:
+        cliente_expo = st.selectbox("Cliente Exportación", clientes_expo)
+        rutas_expo_filtradas = expo_rutas[expo_rutas["Cliente"] == cliente_expo]
+        expo_sel = st.selectbox("Ruta Exportación", rutas_expo_filtradas.index.tolist(), format_func=lambda x: f"{rutas_expo_filtradas.loc[x, 'Cliente']} ➔ {rutas_expo_filtradas.loc[x, 'Origen']} → {rutas_expo_filtradas.loc[x, 'Destino']}")
 
     usar_vacio = st.checkbox("¿Agregar ruta VACÍA entre IMPO y EXPO?")
 
@@ -117,44 +121,44 @@ if os.path.exists(RUTA_RUTAS):
     else:
         vacio_sel = None
 
-   if st.button("Simular Vuelta Redonda"):
-    rutas = []
-    rutas.append(rutas_impo_filtradas.loc[[impo_sel]].squeeze())
-    if vacio_sel is not None:
-        rutas.append(vacio_rutas.loc[[vacio_sel]].squeeze())
-    rutas.append(rutas_expo_filtradas.loc[[expo_sel]].squeeze())
+    if st.button("Simular Vuelta Redonda"):
+        rutas = []
+        rutas.append(rutas_impo_filtradas.loc[[impo_sel]].squeeze())
+        if vacio_sel is not None:
+            rutas.append(vacio_rutas.loc[[vacio_sel]].squeeze())
+        rutas.append(rutas_expo_filtradas.loc[[expo_sel]].squeeze())
 
-    km_total = ingreso_total = diesel_camion_total = diesel_termo_total = sueldo_total = bono_total = casetas_total = extras_total = cruce_total = costo_total_general = 0
+        km_total = ingreso_total = diesel_camion_total = diesel_termo_total = sueldo_total = bono_total = casetas_total = extras_total = cruce_total = costo_total_general = 0
 
-    st.subheader("🧾 Detalle por Ruta")
+        st.subheader("🧾 Detalle por Ruta")
 
-    for ruta in rutas:
-        costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
-        km_total += ruta["KM"]
-        ingreso_total += ruta["Ingreso_Total"]
-        diesel_camion_total += costo_diesel_camion
-        diesel_termo_total += costo_diesel_termo
-        sueldo_total += sueldo
-        bono_total += bono
-        casetas_total += casetas
-        extras_total += extras
-        cruce_total += costo_cruce
-        costo_total_general += total_ruta
+        for ruta in rutas:
+            costo_diesel_camion, costo_diesel_termo, sueldo, bono, casetas, extras, costo_cruce, total_ruta = calcular_costos(ruta, datos)
+            km_total += ruta["KM"]
+            ingreso_total += ruta["Ingreso_Total"]
+            diesel_camion_total += costo_diesel_camion
+            diesel_termo_total += costo_diesel_termo
+            sueldo_total += sueldo
+            bono_total += bono
+            casetas_total += casetas
+            extras_total += extras
+            cruce_total += costo_cruce
+            costo_total_general += total_ruta
 
-        st.markdown(f"""
-        **{ruta['Tipo']} — {ruta['Origen']} → {ruta['Destino']} ({ruta['Cliente']})**
-        - Moneda: {ruta.get('Moneda', 'MXN')}
-        - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
-        - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
-        - Diesel Camión: ${costo_diesel_camion:,.2f}
-        - Diesel Termo: ${costo_diesel_termo:,.2f}
-        - Sueldo Operador: ${sueldo:,.2f}
-        - Bono ISR/IMSS: ${bono:,.2f}
-        - Casetas: ${casetas:,.2f}
-        - Extras: ${extras:,.2f}
-        - Costo Cruce: ${costo_cruce:,.2f}
-        - **Costo Total Ruta:** ${total_ruta:,.2f}
-        """)
+            st.markdown(f"""
+            **{ruta['Tipo']} — {ruta['Cliente']} ➔ {ruta['Origen']} → {ruta['Destino']}**
+            - Moneda: {ruta.get('Moneda', 'MXN')}
+            - Ingreso Original: ${ruta.get('Ingreso_Original', 0):,.2f}
+            - Ingreso Convertido: ${ruta['Ingreso_Total']:,.2f}
+            - Diesel Camión: ${costo_diesel_camion:,.2f}
+            - Diesel Termo: ${costo_diesel_termo:,.2f}
+            - Sueldo Operador: ${sueldo:,.2f}
+            - Bono ISR/IMSS: ${bono:,.2f}
+            - Casetas: ${casetas:,.2f}
+            - Extras: ${extras:,.2f}
+            - Costo Cruce: ${costo_cruce:,.2f}
+            - **Costo Total Ruta:** ${total_ruta:,.2f}
+            """)
 
         utilidad_bruta = ingreso_total - costo_total_general
         estimado_costo_indirecto = ingreso_total * 0.35
@@ -181,4 +185,3 @@ if os.path.exists(RUTA_RUTAS):
 
 else:
     st.warning("No hay rutas guardadas todavía para simular.")
-
