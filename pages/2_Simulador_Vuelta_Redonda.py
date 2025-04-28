@@ -95,7 +95,7 @@ def calcular_costos(ruta, datos):
         safe_number(ruta.get("Renta_Termo", 0))
     ])
 
-    # 🔥 Calcular correctamente costo de cruce
+    # Calcular correctamente costo de cruce
     ingreso_cruce = safe_number(ruta.get("Cruce_Original", 0))
     moneda_cruce = ruta.get("Moneda_Cruce", "MXN")
     tipo_cambio_usd = float(datos.get("Tipo de cambio USD", 17.5))
@@ -144,6 +144,10 @@ if os.path.exists(RUTA_RUTAS):
         vacio_sel = None
 
     if st.button("🚛 Simular Vuelta Redonda"):
+        # 🔵 CORRECCIÓN: definir tipos de cambio aquí también
+        tipo_cambio_usd = float(datos.get("Tipo de cambio USD", 17.5))
+        tipo_cambio_mxn = float(datos.get("Tipo de cambio MXN", 1.0))
+
         rutas = []
         rutas.append(rutas_impo_filtradas.loc[[impo_sel]].squeeze())
         if vacio_sel is not None:
