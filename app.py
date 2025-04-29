@@ -23,8 +23,9 @@ Esta herramienta te permitirá capturar, gestionar y simular rutas de forma efic
 Utiliza el menú lateral para comenzar con:
 
 - 🛣️ **Captura de Ruta**
-- 📁 **Gestión de Rutas**
+- 🗂️ **Gestión de Rutas**
 - 🔁 **Simulador Vuelta Redonda**
+- 📂**Archivos**
 
 ---
 """)
