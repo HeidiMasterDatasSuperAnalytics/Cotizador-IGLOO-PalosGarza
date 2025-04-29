@@ -37,6 +37,7 @@ valores = cargar_datos_generales()
 
 st.title("🚛 Captura de Rutas + Datos Generales")
 
+# Configuración de parámetros generales
 with st.expander("⚙️ Configurar Datos Generales"):
     for key in valores_por_defecto:
         valores[key] = st.number_input(key, value=float(valores.get(key, valores_por_defecto[key])), step=0.1)
@@ -46,14 +47,24 @@ with st.expander("⚙️ Configurar Datos Generales"):
 
 st.markdown("---")
 
+# Cargar rutas existentes
 if os.path.exists(RUTA_RUTAS):
     df_rutas = pd.read_csv(RUTA_RUTAS)
 else:
     df_rutas = pd.DataFrame()
 
+# Selección de monedas antes del formulario
+col_m1, col_m2 = st.columns(2)
+with col_m1:
+    moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"], key="moneda_ingreso_select")
+with col_m2:
+    moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"], key="moneda_cruce_select")
+
+# Formulario principal
 st.subheader("🛣️ Nueva Ruta")
 with st.form("captura_ruta"):
     col1, col2 = st.columns(2)
+
     with col1:
         fecha = st.date_input("Fecha", value=datetime.today())
         tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
@@ -61,13 +72,11 @@ with st.form("captura_ruta"):
         origen = st.text_input("Origen")
         destino = st.text_input("Destino")
         km = st.number_input("Kilómetros", min_value=0.0)
-        moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
         ingreso_flete = st.number_input(
             f"Ingreso Flete en {moneda_ingreso}",
             min_value=0.0,
             key=f"ingreso_flete_{moneda_ingreso}"
         )
-        moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"])
         ingreso_cruce = st.number_input(
             f"Ingreso Cruce en {moneda_cruce}",
             min_value=0.0,
