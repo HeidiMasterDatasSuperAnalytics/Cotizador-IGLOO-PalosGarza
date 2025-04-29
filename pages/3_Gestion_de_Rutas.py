@@ -7,9 +7,21 @@ RUTA_RUTAS = "rutas_guardadas.csv"
 
 st.title("🗂️ Gestión de Rutas Guardadas")
 
+# Parámetros de tipo de cambio
+TIPO_CAMBIO_USD = 17.5
+TIPO_CAMBIO_MXN = 1.0
+
 # Cargar rutas guardadas
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
+
+    # Calcular tipo de cambio e ingresos convertidos
+    df["Tipo de cambio"] = df["Moneda"].apply(lambda x: TIPO_CAMBIO_USD if x == "USD" else TIPO_CAMBIO_MXN)
+    df["Ingreso Flete"] = df["Ingreso_Original"] * df["Tipo de cambio"]
+
+    if "Cruce_Original" in df.columns and "Moneda_Cruce" in df.columns:
+        df["Tipo cambio Cruce"] = df["Moneda_Cruce"].apply(lambda x: TIPO_CAMBIO_USD if x == "USD" else TIPO_CAMBIO_MXN)
+        df["Ingreso Cruce"] = df["Cruce_Original"] * df["Tipo cambio Cruce"]
 
     st.subheader("📋 Rutas Registradas")
     st.dataframe(df, use_container_width=True)
@@ -47,6 +59,7 @@ if os.path.exists(RUTA_RUTAS):
         destino = st.text_input("Destino", value=ruta.get("Destino", ""))
         km = st.number_input("Kilómetros", min_value=0.0, value=float(ruta.get("KM", 0.0)))
         ingreso_original = st.number_input("Ingreso Flete Original", min_value=0.0, value=float(ruta.get("Ingreso_Original", 0.0)))
+        moneda = st.selectbox("Moneda Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda", "MXN")))
 
         if st.button("Guardar cambios"):
             df.at[indice_editar, "Fecha"] = fecha
@@ -56,6 +69,14 @@ if os.path.exists(RUTA_RUTAS):
             df.at[indice_editar, "Destino"] = destino
             df.at[indice_editar, "KM"] = km
             df.at[indice_editar, "Ingreso_Original"] = ingreso_original
+            df.at[indice_editar, "Moneda"] = moneda
+
+            # Recalcular ingresos y tipo de cambio
+            tipo_cambio = TIPO_CAMBIO_USD if moneda == "USD" else TIPO_CAMBIO_MXN
+            ingreso_flete = ingreso_original * tipo_cambio
+
+            df.at[indice_editar, "Tipo de cambio"] = tipo_cambio
+            df.at[indice_editar, "Ingreso Flete"] = ingreso_flete
 
             df.to_csv(RUTA_RUTAS, index=False)
             st.success("✅ Ruta actualizada exitosamente.")
