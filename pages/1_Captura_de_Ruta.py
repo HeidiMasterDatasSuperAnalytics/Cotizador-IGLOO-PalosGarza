@@ -1,56 +1,54 @@
 import streamlit as st
 import pandas as pd
 import os
-from PIL import Image
-import base64
-from io import BytesIO
+from datetime import datetime
 
-# Función para convertir imagen en base64
-def image_to_base64(img):
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    return base64.b64encode(buffer.getvalue()).decode()
-
-# Cargar imágenes
-logo_claro = Image.open("Igloo Original.png")
-logo_oscuro = Image.open("Igloo White.png")
-logo_claro_b64 = image_to_base64(logo_claro)
-logo_oscuro_b64 = image_to_base64(logo_oscuro)
-
-# Mostrar logo arriba a la izquierda
-st.markdown(f"""
-    <div style='text-align: left; margin-bottom: 10px;'>
-        <img src="data:image/png;base64,{logo_claro_b64}" class="logo-light" style="height:50px;">
-        <img src="data:image/png;base64,{logo_oscuro_b64}" class="logo-dark" style="height:50px;">
-    </div>
-    <style>
-    @media (prefers-color-scheme: dark) {{
-        .logo-light {{ display: none; }}
-        .logo-dark {{ display: inline; }}
-    }}
-    @media (prefers-color-scheme: light) {{
-        .logo-light {{ display: inline; }}
-        .logo-dark {{ display: none; }}
-    }}
-    </style>
-""", unsafe_allow_html=True)
-
-st.title("Captura de Ruta")
-
-# Ruta de los archivos
+# Ruta de archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
-# Cargar datos generales
+# Valores por defecto
+valores_por_defecto = {
+    "Rendimiento Camion": 2.5,
+    "Costo Diesel": 24.0,
+    "Rendimiento Termo": 3.0,
+    "Bono ISR IMSS": 462.66,
+    "Pago x km IMPO": 2.10,
+    "Pago x km EXPO": 2.50,
+    "Pago fijo VACIO": 200.00,
+    "Tipo de cambio USD": 17.5,
+    "Tipo de cambio MXN": 1.0
+}
+
+# Funciones auxiliares
 def cargar_datos_generales():
     if os.path.exists(RUTA_DATOS):
         return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
-    return {}
+    else:
+        return valores_por_defecto.copy()
 
-datos_generales = cargar_datos_generales()
+def guardar_datos_generales(valores):
+    df = pd.DataFrame(valores.items(), columns=["Parametro", "Valor"])
+    df.to_csv(RUTA_DATOS, index=False)
 
-tipo_cambio_usd = float(datos_generales.get("Tipo de cambio USD", 17.5))
-tipo_cambio_mxn = float(datos_generales.get("Tipo de cambio MXN", 1.0))
+def safe_number(x):
+    return 0 if (x is None or (isinstance(x, float) and pd.isna(x))) else x
+
+# Cargar datos generales
+valores = cargar_datos_generales()
+
+st.title("🚛 Captura de Rutas + Datos Generales")
+
+# Sección Datos Generales
+with st.expander("⚙️ Configurar Datos Generales"):
+    for key in valores_por_defecto:
+        valores[key] = st.number_input(key, value=float(valores.get(key, valores_por_defecto[key])), step=0.1)
+
+    if st.button("Guardar Datos Generales"):
+        guardar_datos_generales(valores)
+        st.success("✅ Datos Generales guardados correctamente.")
+
+st.markdown("---")
 
 # Cargar rutas guardadas
 if os.path.exists(RUTA_RUTAS):
@@ -58,38 +56,70 @@ if os.path.exists(RUTA_RUTAS):
 else:
     df_rutas = pd.DataFrame()
 
-# Formulario de captura
+# Formulario de captura de rutas
+st.subheader("🛣️ Nueva Ruta")
 with st.form("captura_ruta"):
-    fecha = st.date_input("Fecha de captura")
-    tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
-    cliente = st.text_input("Nombre del Cliente")
-    origen = st.text_input("Origen")
-    destino = st.text_input("Destino")
-    km = st.number_input("Kilómetros recorridos", min_value=0.0)
+    col1, col2 = st.columns(2)
 
-    moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
-    ingreso_flete = st.number_input(f"Ingreso Flete en {moneda_ingreso}", min_value=0.0)
+    with col1:
+        fecha = st.date_input("Fecha de captura", value=datetime.today())
+        tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
+        cliente = st.text_input("Nombre del Cliente")
+        origen = st.text_input("Origen")
+        destino = st.text_input("Destino")
+        km = st.number_input("Kilómetros recorridos", min_value=0.0)
+        moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
+        ingreso_flete = st.number_input(f"Ingreso Flete en {moneda_ingreso}", min_value=0.0)
+        moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"])
+        ingreso_cruce = st.number_input(f"Ingreso Cruce en {moneda_cruce}", min_value=0.0)
 
-    moneda_cruce = st.selectbox("Moneda de Ingreso de Cruce", ["MXN", "USD"])
-    ingreso_cruce = st.number_input(f"Ingreso de Cruce en {moneda_cruce}", min_value=0.0)
+    with col2:
+        horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
+        lavado_termo = st.number_input("Lavado Termo", min_value=0.0)
+        movimiento_local = st.number_input("Movimiento Local", min_value=0.0)
+        puntualidad = st.number_input("Puntualidad", min_value=0.0)
+        pension = st.number_input("Pensión", min_value=0.0)
+        estancia = st.number_input("Estancia", min_value=0.0)
+        fianza_termo = st.number_input("Fianza Termo", min_value=0.0)
+        renta_termo = st.number_input("Renta Termo", min_value=0.0)
+        casetas = st.number_input("Costo de Casetas", min_value=0.0)
 
-    casetas = st.number_input("Costo de Casetas", min_value=0.0)
-    horas_termo = st.number_input("Horas de uso del Termo", min_value=0.0)
-    lavado_termo = st.number_input("Lavado Termo", min_value=0.0)
-    movimiento_local = st.number_input("Movimiento Local", min_value=0.0)
-    puntualidad = st.number_input("Puntualidad", min_value=0.0)
-    pension = st.number_input("Pensión", min_value=0.0)
-    estancia = st.number_input("Estancia", min_value=0.0)
-    fianza_termo = st.number_input("Fianza Termo Rentado/Externo", min_value=0.0)
-    renta_termo = st.number_input("Renta de Termo", min_value=0.0)
-
-    submitted = st.form_submit_button("Guardar Ruta")
+    submitted = st.form_submit_button("💾 Guardar Ruta")
 
     if submitted:
-        tipo_cambio_cruce = tipo_cambio_usd if moneda_cruce == "USD" else tipo_cambio_mxn
+        # Calcular costos automáticos
+        diesel = float(valores.get("Costo Diesel", 24))
+        rendimiento_camion = float(valores.get("Rendimiento Camion", 2.5))
+        rendimiento_termo = float(valores.get("Rendimiento Termo", 3.0))
+        bono_isr_imss = float(valores.get("Bono ISR IMSS", 0))
 
-        # Calcular Costo de Cruce automáticamente
-        costo_cruce = ingreso_cruce * tipo_cambio_cruce if moneda_cruce == "USD" else ingreso_cruce
+        tipo_cambio_usd = float(valores.get("Tipo de cambio USD", 17.5))
+        tipo_cambio_mxn = float(valores.get("Tipo de cambio MXN", 1.0))
+
+        if tipo == "IMPO":
+            sueldo = km * float(valores.get("Pago x km IMPO", 2.1))
+            bono = bono_isr_imss
+        elif tipo == "EXPO":
+            sueldo = km * float(valores.get("Pago x km EXPO", 2.5))
+            bono = bono_isr_imss
+        else:
+            sueldo = float(valores.get("Pago fijo VACIO", 200))
+            bono = 0
+
+        costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
+        costo_diesel_termo = horas_termo * rendimiento_termo * diesel if rendimiento_termo > 0 else 0
+
+        if moneda_cruce == "USD":
+            costo_cruce = ingreso_cruce * tipo_cambio_usd
+        else:
+            costo_cruce = ingreso_cruce * tipo_cambio_mxn
+
+        extras = sum([
+            safe_number(lavado_termo), safe_number(movimiento_local), safe_number(puntualidad),
+            safe_number(pension), safe_number(estancia), safe_number(fianza_termo), safe_number(renta_termo)
+        ])
+
+        costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce
 
         nueva_ruta = {
             "Fecha": fecha,
@@ -102,7 +132,7 @@ with st.form("captura_ruta"):
             "Ingreso_Original": ingreso_flete,
             "Moneda_Cruce": moneda_cruce,
             "Cruce_Original": ingreso_cruce,
-            "Costo_Cruce": costo_cruce,  # Nuevo campo calculado
+            "Costo_Cruce": costo_cruce,
             "Casetas": casetas,
             "Horas_Termo": horas_termo,
             "Lavado_Termo": lavado_termo,
@@ -111,10 +141,19 @@ with st.form("captura_ruta"):
             "Pension": pension,
             "Estancia": estancia,
             "Fianza_Termo": fianza_termo,
-            "Renta_Termo": renta_termo
+            "Renta_Termo": renta_termo,
+            "Costo_Diesel_Camion": costo_diesel_camion,
+            "Costo_Diesel_Termo": costo_diesel_termo,
+            "Sueldo_Operador": sueldo,
+            "Bono": bono,
+            "Costo_Casetas": casetas,
+            "Costo_Extras": extras,
+            "Costo_Total_Ruta": costo_total
         }
 
         df_rutas = pd.concat([df_rutas, pd.DataFrame([nueva_ruta])], ignore_index=True)
         df_rutas.to_csv(RUTA_RUTAS, index=False)
-        st.success("✅ La ruta se guardó exitosamente.")
-        st.rerun()
+
+        st.success("✅ Ruta guardada exitosamente.")
+        st.experimental_rerun()
+
