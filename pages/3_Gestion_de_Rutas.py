@@ -145,8 +145,8 @@ if os.path.exists(RUTA_RUTAS):
                 df.at[indice_editar, "Costo_Extras"] = extras
                 df.at[indice_editar, "Costo_Total_Ruta"] = costo_total
 
-                df.to_csv(RUTA_RUTAS, index=False)
-                st.success("✅ Ruta actualizada exitosamente.")
-                st.experimental_rerun()
+    df.to_csv(RUTA_RUTAS, index=False)
+    st.success("✅ Ruta actualizada exitosamente.")
+    
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
