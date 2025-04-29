@@ -25,7 +25,7 @@ Utiliza el menú lateral para comenzar con:
 - 🛣️ **Captura de Ruta**
 - 🗂️ **Gestión de Rutas**
 - 🔁 **Simulador Vuelta Redonda**
-- 📂**Archivos**
+- 📂 **Archivos**
 
 ---
 """)
