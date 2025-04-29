@@ -57,19 +57,32 @@ if os.path.exists(RUTA_RUTAS):
             - Costo Total Ruta: ${safe_number(ruta['Costo_Total_Ruta']):,.2f}
             """)
 
+        # Calculos nuevos
         utilidad_bruta = ingreso_total - costo_total_general
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
-        porcentaje_utilidad = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+        porcentaje_utilidad_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.markdown("---")
         st.subheader("📊 Resultado General")
+
         st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
         st.write(f"**Costo Total:** ${costo_total_general:,.2f}")
-        st.write(f"**Utilidad Bruta:** ${utilidad_bruta:,.2f}")
+
+        color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
+        st.markdown(f"**Utilidad Bruta:** <span style='color:{color_utilidad_bruta}'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
+
         st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
-        st.write(f"**Utilidad Neta:** ${utilidad_neta:,.2f}")
-        st.write(f"**% Utilidad Neta:** {porcentaje_utilidad:.2f}%")
+
+        color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
+        st.markdown(f"**Utilidad Neta:** <span style='color:{color_utilidad_neta}'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
+
+        color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
+        st.markdown(f"**% Utilidad Bruta:** <span style='color:{color_porcentaje_bruta}'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
+
+        color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
+        st.markdown(f"**% Utilidad Neta:** <span style='color:{color_porcentaje_neta}'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown("---")
         st.subheader("📋 Resumen de Rutas")
@@ -102,20 +115,7 @@ if os.path.exists(RUTA_RUTAS):
         with col2:
             st.markdown("**VACÍO**")
             if ruta_vacio is not None:
-                resumen_vacio = [
-                    f"KM: {safe_number(ruta_vacio.get('KM')):,.2f}",
-                    f"Sueldo: ${safe_number(ruta_vacio.get('Sueldo_Operador')):,.2f}",
-                    f"Diesel Camión: ${safe_number(ruta_vacio.get('Costo_Diesel_Camion')):,.2f}",
-                    "**Extras detallados:**",
-                    f"Lavado Termo: ${safe_number(ruta_vacio.get('Lavado_Termo')):,.2f}",
-                    f"Movimiento Local: ${safe_number(ruta_vacio.get('Movimiento_Local')):,.2f}",
-                    f"Puntualidad: ${safe_number(ruta_vacio.get('Puntualidad')):,.2f}",
-                    f"Pensión: ${safe_number(ruta_vacio.get('Pension')):,.2f}",
-                    f"Estancia: ${safe_number(ruta_vacio.get('Estancia')):,.2f}",
-                    f"Fianza Termo: ${safe_number(ruta_vacio.get('Fianza_Termo')):,.2f}",
-                    f"Renta Termo: ${safe_number(ruta_vacio.get('Renta_Termo')):,.2f}"
-                ]
-                for line in resumen_vacio:
+                for line in resumen_ruta(ruta_vacio):
                     st.write(line)
             else:
                 st.write("No aplica")
@@ -124,5 +124,7 @@ if os.path.exists(RUTA_RUTAS):
             st.markdown("**EXPO**")
             for line in resumen_ruta(ruta_expo):
                 st.write(line)
+
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
+
