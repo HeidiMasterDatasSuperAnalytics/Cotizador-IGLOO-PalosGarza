@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# Ruta de archivos
+# Rutas de archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
@@ -37,7 +37,7 @@ valores = cargar_datos_generales()
 
 st.title("🚛 Captura de Rutas + Datos Generales")
 
-# Configurar parámetros globales
+# Configurar datos generales
 with st.expander("⚙️ Configurar Datos Generales"):
     for key in valores_por_defecto:
         valores[key] = st.number_input(key, value=float(valores.get(key, valores_por_defecto[key])), step=0.1)
@@ -47,18 +47,16 @@ with st.expander("⚙️ Configurar Datos Generales"):
 
 st.markdown("---")
 
-# Cargar rutas si existen
+# Cargar rutas existentes
 if os.path.exists(RUTA_RUTAS):
     df_rutas = pd.read_csv(RUTA_RUTAS)
 else:
     df_rutas = pd.DataFrame()
 
+# FORMULARIO (no guarda, solo llena datos)
 st.subheader("🛣️ Nueva Ruta")
-
-# Formulario principal
 with st.form("captura_ruta"):
     col1, col2 = st.columns(2)
-
     with col1:
         fecha = st.date_input("Fecha", value=datetime.today())
         tipo = st.selectbox("Tipo de Ruta", ["IMPO", "EXPO", "VACIO"])
@@ -82,9 +80,10 @@ with st.form("captura_ruta"):
         renta_termo = st.number_input("Renta Termo", min_value=0.0)
         casetas = st.number_input("Casetas", min_value=0.0)
 
-    submitted = st.form_submit_button("💾 Guardar Ruta")
+    revisar = st.form_submit_button("🔍 Revisar Ruta")
 
-if submitted:
+# SOLO se guarda si se da clic explícito aquí:
+if revisar and st.button("💾 Guardar Ruta"):
     tipo_cambio_flete = valores["Tipo de cambio USD"] if moneda_ingreso == "USD" else valores["Tipo de cambio MXN"]
     tipo_cambio_cruce = valores["Tipo de cambio USD"] if moneda_cruce == "USD" else valores["Tipo de cambio MXN"]
 
