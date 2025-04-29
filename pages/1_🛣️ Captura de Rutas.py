@@ -62,7 +62,7 @@ with st.form("captura_ruta"):
         destino = st.text_input("Destino")
         km = st.number_input("Kilómetros", min_value=0.0)
         moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
-        ingreso_flete = st.number_input(f"Ingreso Flete en {moneda_ingreso}", min_value=0.0), key="ingreso_flete_input"
+        ingreso_flete = st.number_input(f"Ingreso Flete en {moneda_ingreso}", min_value=0.0, key="ingreso_flete_input")
         moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"])
         ingreso_cruce = st.number_input(f"Ingreso Cruce en {moneda_cruce}", min_value=0.0)
     with col2:
