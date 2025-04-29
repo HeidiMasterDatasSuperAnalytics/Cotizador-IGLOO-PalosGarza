@@ -65,29 +65,29 @@ if os.path.exists(RUTA_RUTAS):
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.markdown("---")
-st.subheader("📊 Resultado General")
+        st.subheader("📊 Resultado General")
 
-st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
-st.write(f"**Costo Total:** ${costo_total_general:,.2f}")
+        st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
+        st.write(f"**Costo Total:** ${costo_total_general:,.2f}")
 
-# Utilidad Bruta con color y negrita
-color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
-st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
+        # Utilidad Bruta con color y negrita
+        color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
+        st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
 
-# % Utilidad Bruta con color y negrita (antes de costos indirectos)
-color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
-st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
+        # % Utilidad Bruta con color y negrita (antes de costos indirectos)
+        color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
+        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
 
-# Costos indirectos
-st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+        # Costos indirectos
+        st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
 
-# Utilidad Neta con color y negrita
-color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
-st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_utilidad_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
+        # Utilidad Neta con color y negrita
+        color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
+        st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_utilidad_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
 
-# % Utilidad Neta con color y negrita
-color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
-st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
+        # % Utilidad Neta con color y negrita
+        color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
+        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
 
 
         st.markdown("---")
