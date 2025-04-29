@@ -45,7 +45,7 @@ if os.path.exists(RUTA_RUTAS):
             rutas_seleccionadas.append(ruta_vacio)
         rutas_seleccionadas.append(ruta_expo)
 
-        ingreso_total = sum(safe_number(r.get("Ingreso_Original", 0)) for r in rutas_seleccionadas)
+        ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
         costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
 
         st.subheader("🧾 Detalle de Rutas")
@@ -53,7 +53,7 @@ if os.path.exists(RUTA_RUTAS):
             st.markdown(f"""
             **{ruta['Tipo']} — {ruta['Cliente']}**  
             - {ruta['Origen']} → {ruta['Destino']}  
-            - Ingreso Flete: ${safe_number(ruta['Ingreso_Original']):,.2f}  
+            - Ingreso Total: ${safe_number(ruta['Ingreso Total']):,.2f}  
             - Costo Total Ruta: ${safe_number(ruta['Costo_Total_Ruta']):,.2f}
             """)
 
@@ -82,9 +82,16 @@ if os.path.exists(RUTA_RUTAS):
                 f"Diesel Camión: ${safe_number(r.get('Costo_Diesel_Camion')):,.2f}",
                 f"Diesel Termo: ${safe_number(r.get('Costo_Diesel_Termo')):,.2f}",
                 f"Sueldo: ${safe_number(r.get('Sueldo_Operador')):,.2f}",
-                f"Casetas: ${safe_number(r.get('Costo_Casetas')):,.2f}",
-                f"Cruce: ${safe_number(r.get('Costo_Cruce')):,.2f}",
-                f"Extras: ${safe_number(r.get('Costo_Extras')):,.2f}"
+                f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
+                f"Cruce: ${safe_number(r.get('Ingreso Cruce')):,.2f}",
+                "**Extras detallados:**",
+                f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
+                f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
+                f"Puntualidad: ${safe_number(r.get('Puntualidad')):,.2f}",
+                f"Pensión: ${safe_number(r.get('Pension')):,.2f}",
+                f"Estancia: ${safe_number(r.get('Estancia')):,.2f}",
+                f"Fianza Termo: ${safe_number(r.get('Fianza_Termo')):,.2f}",
+                f"Renta Termo: ${safe_number(r.get('Renta_Termo')):,.2f}"
             ]
 
         with col1:
@@ -96,9 +103,17 @@ if os.path.exists(RUTA_RUTAS):
             st.markdown("**VACÍO**")
             if ruta_vacio is not None:
                 resumen_vacio = [
+                    f"KM: {safe_number(ruta_vacio.get('KM')):,.2f}",
                     f"Sueldo: ${safe_number(ruta_vacio.get('Sueldo_Operador')):,.2f}",
                     f"Diesel Camión: ${safe_number(ruta_vacio.get('Costo_Diesel_Camion')):,.2f}",
-                    f"Extras: ${safe_number(ruta_vacio.get('Costo_Extras')):,.2f}"
+                    "**Extras detallados:**",
+                    f"Lavado Termo: ${safe_number(ruta_vacio.get('Lavado_Termo')):,.2f}",
+                    f"Movimiento Local: ${safe_number(ruta_vacio.get('Movimiento_Local')):,.2f}",
+                    f"Puntualidad: ${safe_number(ruta_vacio.get('Puntualidad')):,.2f}",
+                    f"Pensión: ${safe_number(ruta_vacio.get('Pension')):,.2f}",
+                    f"Estancia: ${safe_number(ruta_vacio.get('Estancia')):,.2f}",
+                    f"Fianza Termo: ${safe_number(ruta_vacio.get('Fianza_Termo')):,.2f}",
+                    f"Renta Termo: ${safe_number(ruta_vacio.get('Renta_Termo')):,.2f}"
                 ]
                 for line in resumen_vacio:
                     st.write(line)
