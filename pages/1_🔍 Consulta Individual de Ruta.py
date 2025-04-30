@@ -20,6 +20,16 @@ if os.path.exists(RUTA_RUTAS):
     )
 
     ruta = df.loc[index_sel]
+        st.markdown("---")
+    st.subheader("📊 Ingresos y Utilidades")
+
+    st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
+    st.write(f"**Costo Total:** ${costo_total:,.2f}")
+    st.markdown(colored_bold("Utilidad Bruta", f"${utilidad_bruta:,.2f}", utilidad_bruta >= 0), unsafe_allow_html=True)
+    st.markdown(colored_bold("% Utilidad Bruta", f"{porcentaje_bruta:.2f}%", porcentaje_bruta >= 50), unsafe_allow_html=True)
+    st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+    st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
+    st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("📋 Detalles y Costos de la Ruta")
@@ -71,17 +81,6 @@ if os.path.exists(RUTA_RUTAS):
     def colored_bold(label, value, condition, threshold=0):
         color = "green" if condition else "red"
         return f"<strong>{label}:</strong> <span style='color:{color}; font-weight:bold'>{value}</span>"
-
-    st.markdown("---")
-    st.subheader("📊 Ingresos y Utilidades")
-
-    st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
-    st.write(f"**Costo Total:** ${costo_total:,.2f}")
-    st.markdown(colored_bold("Utilidad Bruta", f"${utilidad_bruta:,.2f}", utilidad_bruta >= 0), unsafe_allow_html=True)
-    st.markdown(colored_bold("% Utilidad Bruta", f"{porcentaje_bruta:.2f}%", porcentaje_bruta >= 50), unsafe_allow_html=True)
-    st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
-    st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
-    st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
