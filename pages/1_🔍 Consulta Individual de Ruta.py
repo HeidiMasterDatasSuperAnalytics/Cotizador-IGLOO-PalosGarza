@@ -97,3 +97,4 @@ if os.path.exists(RUTA_RUTAS):
 
 else:
     st.warning("⚠️ No hay rutas registradas para consultar.")
+
