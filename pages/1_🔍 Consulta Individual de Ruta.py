@@ -20,7 +20,8 @@ if os.path.exists(RUTA_RUTAS):
     )
 
     ruta = df.loc[index_sel]
-        st.markdown("---")
+    
+    st.markdown("---")
     st.subheader("📊 Ingresos y Utilidades")
 
     st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
