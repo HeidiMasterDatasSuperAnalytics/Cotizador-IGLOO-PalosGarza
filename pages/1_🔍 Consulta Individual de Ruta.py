@@ -102,8 +102,6 @@ with col2:
     st.write(f"- Estancia: ${safe_number(ruta['Estancia']):,.2f}")
     st.write(f"- Fianza Termo: ${safe_number(ruta['Fianza_Termo']):,.2f}")
     st.write(f"- Renta Termo: ${safe_number(ruta['Renta_Termo']):,.2f}")
-    for line in detalles:
-    st.write(line)
-
+    
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
