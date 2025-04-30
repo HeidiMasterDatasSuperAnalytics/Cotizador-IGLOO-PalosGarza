@@ -162,4 +162,3 @@ if st.session_state.revisar_ruta and st.button("💾 Guardar Ruta"):
     st.session_state.revisar_ruta = False
     del st.session_state["datos_captura"]
     st.experimental_rerun()
-
