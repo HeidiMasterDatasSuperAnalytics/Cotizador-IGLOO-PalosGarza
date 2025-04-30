@@ -20,7 +20,7 @@ if os.path.exists(RUTA_RUTAS):
     )
 
     ruta = df.loc[index_sel]
-    
+
     st.markdown("---")
     st.subheader("📊 Ingresos y Utilidades")
 
@@ -31,7 +31,7 @@ if os.path.exists(RUTA_RUTAS):
     st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
     st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
     st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
-
+    
     st.markdown("---")
     st.subheader("📋 Detalles y Costos de la Ruta")
 
