@@ -74,6 +74,8 @@ with st.form("captura_ruta"):
         ingreso_flete = st.number_input("Ingreso Flete", min_value=0.0)
         moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"])
         ingreso_cruce = st.number_input("Ingreso Cruce", min_value=0.0)
+        moneda_costo_cruce = st.selectbox("Moneda Costo Cruce", ["MXN", "USD"])
+        costo_cruce = st.number_input("Costo Cruce", min_value=0.0)
 
     with col2:
         horas_termo = st.number_input("Horas Termo", min_value=0.0)
@@ -89,25 +91,26 @@ with st.form("captura_ruta"):
     revisar = st.form_submit_button("🔍 Revisar Ruta")
     if revisar:
         st.session_state.revisar_ruta = True
-        # Guarda los datos temporalmente en session_state
         st.session_state.datos_captura = {
             "fecha": fecha, "tipo": tipo, "cliente": cliente, "origen": origen, "destino": destino, "km": km,
             "moneda_ingreso": moneda_ingreso, "ingreso_flete": ingreso_flete,
             "moneda_cruce": moneda_cruce, "ingreso_cruce": ingreso_cruce,
+            "moneda_costo_cruce": moneda_costo_cruce, "costo_cruce": costo_cruce,
             "horas_termo": horas_termo, "lavado_termo": lavado_termo, "movimiento_local": movimiento_local,
             "puntualidad": puntualidad, "pension": pension, "estancia": estancia,
             "fianza_termo": fianza_termo, "renta_termo": renta_termo, "casetas": casetas
         }
 
-# Guardar Ruta si fue revisada
 if st.session_state.revisar_ruta and st.button("💾 Guardar Ruta"):
     d = st.session_state.datos_captura
 
     tipo_cambio_flete = valores["Tipo de cambio USD"] if d["moneda_ingreso"] == "USD" else valores["Tipo de cambio MXN"]
     tipo_cambio_cruce = valores["Tipo de cambio USD"] if d["moneda_cruce"] == "USD" else valores["Tipo de cambio MXN"]
+    tipo_cambio_costo_cruce = valores["Tipo de cambio USD"] if d["moneda_costo_cruce"] == "USD" else valores["Tipo de cambio MXN"]
 
     ingreso_flete_convertido = d["ingreso_flete"] * tipo_cambio_flete
     ingreso_cruce_convertido = d["ingreso_cruce"] * tipo_cambio_cruce
+    costo_cruce_convertido = d["costo_cruce"] * tipo_cambio_costo_cruce
     ingreso_total = ingreso_flete_convertido + ingreso_cruce_convertido
 
     costo_diesel_camion = (d["km"] / valores["Rendimiento Camion"]) * valores["Costo Diesel"]
@@ -132,13 +135,15 @@ if st.session_state.revisar_ruta and st.button("💾 Guardar Ruta"):
         safe_number(d["fianza_termo"]), safe_number(d["renta_termo"])
     ])
 
-    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + d["casetas"] + extras + ingreso_cruce_convertido
+    costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + d["casetas"] + extras + costo_cruce_convertido
 
     nueva_ruta = {
         "Fecha": d["fecha"], "Tipo": d["tipo"], "Cliente": d["cliente"], "Origen": d["origen"], "Destino": d["destino"], "KM": d["km"],
         "Moneda": d["moneda_ingreso"], "Ingreso_Original": d["ingreso_flete"], "Tipo de cambio": tipo_cambio_flete,
         "Ingreso Flete": ingreso_flete_convertido, "Moneda_Cruce": d["moneda_cruce"], "Cruce_Original": d["ingreso_cruce"],
         "Tipo cambio Cruce": tipo_cambio_cruce, "Ingreso Cruce": ingreso_cruce_convertido,
+        "Moneda Costo Cruce": d["moneda_costo_cruce"], "Costo Cruce": d["costo_cruce"],
+        "Costo Cruce Convertido": costo_cruce_convertido,
         "Ingreso Total": ingreso_total,
         "Pago por KM": pago_km, "Sueldo_Operador": sueldo, "Bono": bono,
         "Casetas": d["casetas"], "Horas_Termo": d["horas_termo"], "Lavado_Termo": d["lavado_termo"],
