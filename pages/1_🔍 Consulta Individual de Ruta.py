@@ -21,8 +21,23 @@ if os.path.exists(RUTA_RUTAS):
 
     ruta = df.loc[index_sel]
 
+    # =====================
+    # 📊 Ingresos y Utilidades
+    # =====================
     st.markdown("---")
     st.subheader("📊 Ingresos y Utilidades")
+
+    ingreso_total = safe_number(ruta["Ingreso Total"])
+    costo_total = safe_number(ruta["Costo_Total_Ruta"])
+    utilidad_bruta = ingreso_total - costo_total
+    costos_indirectos = ingreso_total * 0.35
+    utilidad_neta = utilidad_bruta - costos_indirectos
+    porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+    porcentaje_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+
+    def colored_bold(label, value, condition, threshold=0):
+        color = "green" if condition else "red"
+        return f"<strong>{label}:</strong> <span style='color:{color}; font-weight:bold'>{value}</span>"
 
     st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
     st.write(f"**Costo Total:** ${costo_total:,.2f}")
@@ -31,7 +46,10 @@ if os.path.exists(RUTA_RUTAS):
     st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
     st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
     st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
-    
+
+    # =====================
+    # 📋 Detalles y Costos
+    # =====================
     st.markdown("---")
     st.subheader("📋 Detalles y Costos de la Ruta")
 
@@ -64,24 +82,11 @@ if os.path.exists(RUTA_RUTAS):
         f"- Pensión: ${safe_number(ruta['Pension']):,.2f}",
         f"- Estancia: ${safe_number(ruta['Estancia']):,.2f}",
         f"- Fianza Termo: ${safe_number(ruta['Fianza_Termo']):,.2f}",
-        f"- Renta Termo: ${safe_number(ruta['Renta_Termo']):,.2f}",
+        f"- Renta Termo: ${safe_number(ruta['Renta_Termo']):,.2f}"
     ]
 
     for line in detalles:
         st.write(line)
-
-    # Cálculos de ingresos y utilidades
-    ingreso_total = safe_number(ruta["Ingreso Total"])
-    costo_total = safe_number(ruta["Costo_Total_Ruta"])
-    utilidad_bruta = ingreso_total - costo_total
-    costos_indirectos = ingreso_total * 0.35
-    utilidad_neta = utilidad_bruta - costos_indirectos
-    porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-    porcentaje_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
-
-    def colored_bold(label, value, condition, threshold=0):
-        color = "green" if condition else "red"
-        return f"<strong>{label}:</strong> <span style='color:{color}; font-weight:bold'>{value}</span>"
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
