@@ -102,7 +102,7 @@ if os.path.exists(RUTA_RUTAS):
                 f"Diesel Termo: ${safe_number(r.get('Costo_Diesel_Termo')):,.2f}",
                 f"Sueldo: ${safe_number(r.get('Sueldo_Operador')):,.2f}",
                 f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
-                f"Cruce: ${safe_number(r.get('Ingreso Cruce')):,.2f}",
+                f"Cruce: ${safe_number(r.get('Costo Cruce Convertido')):,.2f}",
                 "**Extras detallados:**",
                 f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
                 f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
