@@ -3,11 +3,9 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# Rutas de archivos
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_DATOS = "datos_generales.csv"
 
-# Funciones auxiliares
 def cargar_datos_generales():
     if os.path.exists(RUTA_DATOS):
         return pd.read_csv(RUTA_DATOS).set_index("Parametro").to_dict()["Valor"]
@@ -28,7 +26,6 @@ if os.path.exists(RUTA_RUTAS):
     st.markdown(f"**Total de rutas registradas:** {len(df)}")
     st.markdown("---")
 
-    # Eliminar rutas
     st.subheader("🗑️ Eliminar rutas")
     indices = st.multiselect("Selecciona los índices a eliminar", df.index.tolist())
     if st.button("Eliminar rutas seleccionadas") and indices:
@@ -39,8 +36,6 @@ if os.path.exists(RUTA_RUTAS):
         st.experimental_rerun()
 
     st.markdown("---")
-
-    # Editar rutas
     st.subheader("✏️ Editar Ruta Existente")
     indice_editar = st.selectbox("Selecciona el índice a editar", df.index.tolist())
     if indice_editar is not None:
@@ -87,34 +82,28 @@ if os.path.exists(RUTA_RUTAS):
                 ingreso_total = ingreso_flete_convertido + ingreso_cruce_convertido
                 costo_cruce_convertido = costo_cruce * tipo_cambio_costo_cruce
 
-                diesel = valores.get("Costo Diesel", 24.0)
-                rendimiento_camion = valores.get("Rendimiento Camion", 2.5)
-                rendimiento_termo = valores.get("Rendimiento Termo", 3.0)
-
-                costo_diesel_camion = (km / rendimiento_camion) * diesel if rendimiento_camion > 0 else 0
-                costo_diesel_termo = horas_termo * rendimiento_termo * diesel if rendimiento_termo > 0 else 0
+                costo_diesel_camion = (km / valores["Rendimiento Camion"]) * valores["Costo Diesel"]
+                costo_diesel_termo = horas_termo * valores["Rendimiento Termo"] * valores["Costo Diesel"]
 
                 if tipo == "IMPO":
-                    pago_km = valores.get("Pago x km IMPO", 2.1)
+                    pago_km = valores["Pago x km IMPO"]
                     sueldo = km * pago_km
-                    bono = valores.get("Bono ISR IMSS", 462.66)
+                    bono = valores["Bono ISR IMSS"]
                 elif tipo == "EXPO":
-                    pago_km = valores.get("Pago x km EXPO", 2.5)
+                    pago_km = valores["Pago x km EXPO"]
                     sueldo = km * pago_km
-                    bono = valores.get("Bono ISR IMSS", 462.66)
+                    bono = valores["Bono ISR IMSS"]
                 else:
                     pago_km = 0.0
-                    sueldo = valores.get("Pago fijo VACIO", 200.0)
+                    sueldo = valores["Pago fijo VACIO"]
                     bono = 0.0
 
-                extras = sum([
-                    safe_number(lavado_termo), safe_number(movimiento_local), safe_number(puntualidad),
-                    safe_number(pension), safe_number(estancia), safe_number(fianza_termo), safe_number(renta_termo)
-                ])
+                extras = sum([safe_number(lavado_termo), safe_number(movimiento_local), safe_number(puntualidad),
+                              safe_number(pension), safe_number(estancia), safe_number(fianza_termo), safe_number(renta_termo)])
 
                 costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce_convertido
 
-                # Actualizar campos
+                # Actualizar DataFrame
                 df.at[indice_editar, "Fecha"] = fecha
                 df.at[indice_editar, "Tipo"] = tipo
                 df.at[indice_editar, "Cliente"] = cliente
@@ -152,5 +141,6 @@ if os.path.exists(RUTA_RUTAS):
 
                 df.to_csv(RUTA_RUTAS, index=False)
                 st.success("✅ Ruta actualizada exitosamente.")
+
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
