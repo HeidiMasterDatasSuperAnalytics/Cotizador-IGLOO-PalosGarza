@@ -54,8 +54,8 @@ if os.path.exists(RUTA_RUTAS):
                 ingreso_original = st.number_input("Ingreso Flete Original", min_value=0.0, value=float(ruta.get("Ingreso_Original", 0.0)))
                 moneda_cruce = st.selectbox("Moneda Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda_Cruce", "MXN")))
                 ingreso_cruce = st.number_input("Ingreso Cruce Original", min_value=0.0, value=float(ruta.get("Cruce_Original", 0.0)))
-                moneda_costo_cruce = st.selectbox("Moneda Costo Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda_Costo_Cruce", "MXN")) if "Moneda_Costo_Cruce" in ruta else 0)
-                costo_cruce = st.number_input("Costo Cruce", min_value=0.0, value=float(ruta.get("Costo_Cruce", 0.0)) if "Costo_Cruce" in ruta else 0.0)
+                moneda_costo_cruce = st.selectbox("Moneda Costo Cruce", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda Costo Cruce", "MXN")))
+                costo_cruce = st.number_input("Costo Cruce", min_value=0.0, value=float(ruta.get("Costo Cruce", 0.0)))
             with col2:
                 horas_termo = st.number_input("Horas Termo", min_value=0.0, value=float(ruta.get("Horas_Termo", 0.0)))
                 lavado_termo = st.number_input("Lavado Termo", min_value=0.0, value=float(ruta.get("Lavado_Termo", 0.0)))
@@ -98,12 +98,13 @@ if os.path.exists(RUTA_RUTAS):
                     sueldo = valores["Pago fijo VACIO"]
                     bono = 0.0
 
-                extras = sum([safe_number(lavado_termo), safe_number(movimiento_local), safe_number(puntualidad),
-                              safe_number(pension), safe_number(estancia), safe_number(fianza_termo), safe_number(renta_termo)])
+                extras = sum([
+                    safe_number(lavado_termo), safe_number(movimiento_local), safe_number(puntualidad),
+                    safe_number(pension), safe_number(estancia), safe_number(fianza_termo), safe_number(renta_termo)
+                ])
 
                 costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce_convertido
 
-                # Actualizar DataFrame
                 df.at[indice_editar, "Fecha"] = fecha
                 df.at[indice_editar, "Tipo"] = tipo
                 df.at[indice_editar, "Cliente"] = cliente
@@ -119,8 +120,8 @@ if os.path.exists(RUTA_RUTAS):
                 df.at[indice_editar, "Tipo cambio Cruce"] = tipo_cambio_cruce
                 df.at[indice_editar, "Ingreso Cruce"] = ingreso_cruce_convertido
                 df.at[indice_editar, "Ingreso Total"] = ingreso_total
-                df.at[indice_editar, "Moneda_Costo_Cruce"] = moneda_costo_cruce
-                df.at[indice_editar, "Costo_Cruce"] = costo_cruce
+                df.at[indice_editar, "Moneda Costo Cruce"] = moneda_costo_cruce
+                df.at[indice_editar, "Costo Cruce"] = costo_cruce
                 df.at[indice_editar, "Costo Cruce Convertido"] = costo_cruce_convertido
                 df.at[indice_editar, "Pago por KM"] = pago_km
                 df.at[indice_editar, "Sueldo_Operador"] = sueldo
@@ -141,6 +142,5 @@ if os.path.exists(RUTA_RUTAS):
 
                 df.to_csv(RUTA_RUTAS, index=False)
                 st.success("✅ Ruta actualizada exitosamente.")
-
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
