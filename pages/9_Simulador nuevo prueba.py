@@ -100,13 +100,66 @@ if os.path.exists(RUTA_RUTAS):
         porcentaje_utilidad_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
+        # 🗂️ Detalle de Rutas
+        st.markdown("---")
+        st.subheader("🗂️ Detalle de Rutas")
+        for r in rutas_seleccionadas:
+            st.markdown(f"""
+**{r['Tipo']} — {r.get('Cliente', 'Sin cliente')}**  
+- {r['Origen']} → {r['Destino']}  
+- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}  
+- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}
+""")
+
+        # 📊 Resultado General
         st.markdown("---")
         st.subheader("📊 Resultado General")
+        color_bruta = "green" if utilidad_bruta >= 0 else "red"
+        color_neta = "green" if utilidad_neta >= 0 else "red"
+        color_pct_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
+        color_pct_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
+
         st.markdown(f"**Ingreso Total:** ${ingreso_total:,.2f}")
         st.markdown(f"**Costo Total:** ${costo_total_general:,.2f}")
-        st.markdown(f"**Utilidad Bruta:** ${utilidad_bruta:,.2f} ({porcentaje_utilidad_bruta:.2f}%)")
+        st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
+        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_pct_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
         st.markdown(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
-        st.markdown(f"**Utilidad Neta:** ${utilidad_neta:,.2f} ({porcentaje_utilidad_neta:.2f}%)")
+        st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
+        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_pct_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
+
+        # 📋 Resumen de Rutas
+        st.markdown("---")
+        st.subheader("📋 Resumen de Rutas")
+        tipos = ["IMPO", "VACIO", "EXPO"]
+        cols = st.columns(len(tipos))
+
+        def resumen_ruta(r):
+            return [
+                f"KM: {safe_number(r.get('KM')):,.2f}",
+                f"Diesel Camión: ${safe_number(r.get('Costo_Diesel_Camion')):,.2f}",
+                f"Diesel Termo: ${safe_number(r.get('Costo_Diesel_Termo')):,.2f}",
+                f"Sueldo: ${safe_number(r.get('Sueldo_Operador')):,.2f}",
+                f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
+                f"Costo Cruce Convertido: ${safe_number(r.get('Costo Cruce Convertido')):,.2f}",
+                "**Extras detallados:**",
+                f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
+                f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
+                f"Puntualidad: ${safe_number(r.get('Puntualidad')):,.2f}",
+                f"Pensión: ${safe_number(r.get('Pension')):,.2f}",
+                f"Estancia: ${safe_number(r.get('Estancia')):,.2f}",
+                f"Fianza Termo: ${safe_number(r.get('Fianza_Termo')):,.2f}",
+                f"Renta Termo: ${safe_number(r.get('Renta_Termo')):,.2f}"
+            ]
+
+        for i, tipo in enumerate(tipos):
+            with cols[i]:
+                st.markdown(f"**{tipo}**")
+                ruta = next((r for r in rutas_seleccionadas if r["Tipo"] == tipo), None)
+                if ruta is not None:
+                    for line in resumen_ruta(ruta):
+                        st.write(line)
+                else:
+                    st.write("No aplica")
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
