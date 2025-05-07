@@ -100,12 +100,12 @@ if os.path.exists(RUTA_RUTAS):
         porcentaje_utilidad_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
         porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-        # 🗂️ Detalle de Rutas
+        # 📄 Detalle de Rutas
         st.markdown("---")
-        st.subheader("🗂️ Detalle de Rutas")
+        st.markdown("## 📄 Detalle de Rutas")
         for r in rutas_seleccionadas:
             st.markdown(f"""
-**{r['Tipo']} — {r.get('Cliente', 'Sin cliente')}**  
+**{r['Tipo']} — {r.get('Cliente', 'nan')}**  
 - {r['Origen']} → {r['Destino']}  
 - Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}  
 - Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}
@@ -113,25 +113,26 @@ if os.path.exists(RUTA_RUTAS):
 
         # 📊 Resultado General
         st.markdown("---")
-        st.subheader("📊 Resultado General")
+        st.markdown("## 📊 Resultado General")
+
         color_bruta = "green" if utilidad_bruta >= 0 else "red"
         color_neta = "green" if utilidad_neta >= 0 else "red"
         color_pct_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
         color_pct_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
 
-        st.markdown(f"**Ingreso Total:** ${ingreso_total:,.2f}")
-        st.markdown(f"**Costo Total:** ${costo_total_general:,.2f}")
+        st.markdown(f"**Ingreso Total:** <span style='font-weight:bold'>${ingreso_total:,.2f}</span>", unsafe_allow_html=True)
+        st.markdown(f"**Costo Total:** <span style='font-weight:bold'>${costo_total_general:,.2f}</span>", unsafe_allow_html=True)
         st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
         st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_pct_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
-        st.markdown(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+        st.markdown(f"**Costos Indirectos (35%):** <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
         st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
         st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_pct_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
 
         # 📋 Resumen de Rutas
         st.markdown("---")
-        st.subheader("📋 Resumen de Rutas")
+        st.markdown("## 📋 Resumen de Rutas")
         tipos = ["IMPO", "VACIO", "EXPO"]
-        cols = st.columns(len(tipos))
+        columnas = st.columns(3)
 
         def resumen_ruta(r):
             return [
@@ -152,7 +153,7 @@ if os.path.exists(RUTA_RUTAS):
             ]
 
         for i, tipo in enumerate(tipos):
-            with cols[i]:
+            with columnas[i]:
                 st.markdown(f"**{tipo}**")
                 ruta = next((r for r in rutas_seleccionadas if r["Tipo"] == tipo), None)
                 if ruta is not None:
