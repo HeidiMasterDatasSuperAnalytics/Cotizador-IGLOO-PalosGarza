@@ -4,7 +4,7 @@ import os
 
 RUTA_RUTAS = "rutas_guardadas.csv"
 
-st.title("🔁 Simulador de Vuelta Redonda")
+st.title("🛁 Simulador de Vuelta Redonda")
 
 def safe_number(x):
     return 0 if (x is None or (isinstance(x, float) and pd.isna(x))) else x
@@ -12,12 +12,12 @@ def safe_number(x):
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
 
-    impo_rutas = df[df["Tipo"] == "IMPO"]
-    expo_rutas = df[df["Tipo"] == "EXPO"]
-    vacio_rutas = df[df["Tipo"] == "VACIO"]
+    impo_rutas = df[df["Tipo"] == "IMPO"].copy()
+    expo_rutas = df[df["Tipo"] == "EXPO"].copy()
+    vacio_rutas = df[df["Tipo"] == "VACIO"].copy()
 
-    st.subheader("📌 Paso 1: Selección de ruta principal")
-    tipo_principal = st.selectbox("¿Qué tipo de ruta deseas seleccionar primero?", ["IMPO", "EXPO"])
+    st.subheader("📌 Paso 1: Selecciona tipo de ruta principal")
+    tipo_principal = st.selectbox("Tipo principal", ["IMPO", "EXPO"])
 
     ruta_principal = None
     ruta_vacio = None
@@ -25,114 +25,108 @@ if os.path.exists(RUTA_RUTAS):
     rutas_seleccionadas = []
 
     if tipo_principal == "IMPO":
-        cliente = st.selectbox("Cliente IMPO", impo_rutas["Cliente"].dropna().unique())
-        rutas = impo_rutas[impo_rutas["Cliente"] == cliente]
-        idx = st.selectbox("Ruta IMPO", rutas.index.tolist(), format_func=lambda x: f"{rutas.loc[x, 'Origen']} → {rutas.loc[x, 'Destino']}")
-        ruta_principal = rutas.loc[idx]
+        rutas_unicas = impo_rutas[["Origen", "Destino"]].drop_duplicates()
+        idx = st.selectbox("Selecciona ruta IMPO", rutas_unicas.index,
+                          format_func=lambda x: f"{rutas_unicas.loc[x, 'Origen']} → {rutas_unicas.loc[x, 'Destino']}")
+        origen = rutas_unicas.loc[idx, "Origen"]
+        destino = rutas_unicas.loc[idx, "Destino"]
+        candidatas = impo_rutas[(impo_rutas["Origen"] == origen) & (impo_rutas["Destino"] == destino)].copy()
+        candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
+        candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
+        sel = st.selectbox("Cliente (ordenado por utilidad)", candidatas.index,
+                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} (${candidatas.loc[x, 'Utilidad']:.2f})")
+        ruta_principal = candidatas.loc[sel]
         rutas_seleccionadas.append(ruta_principal)
 
+        destino_ref = ruta_principal["Destino"]
+        vacios = vacio_rutas[vacio_rutas["Origen"] == destino_ref].copy()
         st.markdown("---")
         st.subheader("📌 Paso 2: Ruta VACÍA sugerida (opcional)")
-        destino_impo = ruta_principal["Destino"]
-        vacio_candidatos = vacio_rutas[vacio_rutas["Origen"] == destino_impo]
-        if not vacio_candidatos.empty:
-            vacio_idx = st.selectbox("Ruta VACÍA (Origen = " + destino_impo + ")", vacio_candidatos.index.tolist(),
-                                     format_func=lambda x: f"{vacio_candidatos.loc[x, 'Origen']} → {vacio_candidatos.loc[x, 'Destino']}")
-            ruta_vacio = vacio_candidatos.loc[vacio_idx]
+        if not vacios.empty:
+            vacio_idx = st.selectbox("Ruta VACÍA (Origen = " + destino_ref + ")", vacios.index,
+                                     format_func=lambda x: f"{vacios.loc[x, 'Origen']} → {vacios.loc[x, 'Destino']}")
+            ruta_vacio = vacios.loc[vacio_idx]
             rutas_seleccionadas.append(ruta_vacio)
 
         st.markdown("---")
         st.subheader("📌 Paso 3: Ruta EXPO sugerida (opcional)")
-        if ruta_vacio is not None:
-            destino_vacio = ruta_vacio["Destino"]
-            candidatos = expo_rutas[expo_rutas["Origen"] == destino_vacio].copy()
-        else:
-            candidatos = expo_rutas[expo_rutas["Origen"] == destino_impo].copy()
-
+        origen_expo = ruta_vacio["Destino"] if ruta_vacio is not None else destino_ref
+        candidatos = expo_rutas[expo_rutas["Origen"] == origen_expo].copy()
         if not candidatos.empty:
             candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
             candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
-            expo_idx = st.selectbox("Ruta EXPO sugerida", candidatos.index.tolist(),
-                                    format_func=lambda x: f"{candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
+            expo_idx = st.selectbox("Ruta EXPO sugerida", candidatos.index,
+                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
             ruta_secundaria = candidatos.loc[expo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
 
-    else:  # tipo_principal == "EXPO"
-        cliente = st.selectbox("Cliente EXPO", expo_rutas["Cliente"].dropna().unique())
-        rutas = expo_rutas[expo_rutas["Cliente"] == cliente]
-        idx = st.selectbox("Ruta EXPO", rutas.index.tolist(), format_func=lambda x: f"{rutas.loc[x, 'Origen']} → {rutas.loc[x, 'Destino']}")
-        ruta_principal = rutas.loc[idx]
+    else:  # EXPO
+        rutas_unicas = expo_rutas[["Origen", "Destino"]].drop_duplicates()
+        idx = st.selectbox("Selecciona ruta EXPO", rutas_unicas.index,
+                          format_func=lambda x: f"{rutas_unicas.loc[x, 'Origen']} → {rutas_unicas.loc[x, 'Destino']}")
+        origen = rutas_unicas.loc[idx, "Origen"]
+        destino = rutas_unicas.loc[idx, "Destino"]
+        candidatas = expo_rutas[(expo_rutas["Origen"] == origen) & (expo_rutas["Destino"] == destino)].copy()
+        candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
+        candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
+        sel = st.selectbox("Cliente (ordenado por utilidad)", candidatas.index,
+                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} (${candidatas.loc[x, 'Utilidad']:.2f})")
+        ruta_principal = candidatas.loc[sel]
         rutas_seleccionadas.append(ruta_principal)
 
+        destino_ref = ruta_principal["Destino"]
+        vacios = vacio_rutas[vacio_rutas["Origen"] == destino_ref].copy()
         st.markdown("---")
         st.subheader("📌 Paso 2: Ruta VACÍA sugerida (opcional)")
-        destino_expo = ruta_principal["Destino"]
-        vacio_candidatos = vacio_rutas[vacio_rutas["Origen"] == destino_expo]
-        if not vacio_candidatos.empty:
-            vacio_idx = st.selectbox("Ruta VACÍA (Origen = " + destino_expo + ")", vacio_candidatos.index.tolist(),
-                                     format_func=lambda x: f"{vacio_candidatos.loc[x, 'Origen']} → {vacio_candidatos.loc[x, 'Destino']}")
-            ruta_vacio = vacio_candidatos.loc[vacio_idx]
+        if not vacios.empty:
+            vacio_idx = st.selectbox("Ruta VACÍA (Origen = " + destino_ref + ")", vacios.index,
+                                     format_func=lambda x: f"{vacios.loc[x, 'Origen']} → {vacios.loc[x, 'Destino']}")
+            ruta_vacio = vacios.loc[vacio_idx]
             rutas_seleccionadas.append(ruta_vacio)
 
         st.markdown("---")
         st.subheader("📌 Paso 3: Ruta IMPO sugerida (opcional)")
-        if ruta_vacio is not None:
-            destino_vacio = ruta_vacio["Destino"]
-            candidatos = impo_rutas[impo_rutas["Origen"] == destino_vacio].copy()
-        else:
-            candidatos = impo_rutas[impo_rutas["Origen"] == destino_expo].copy()
-
+        origen_impo = ruta_vacio["Destino"] if ruta_vacio is not None else destino_ref
+        candidatos = impo_rutas[impo_rutas["Origen"] == origen_impo].copy()
         if not candidatos.empty:
             candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
             candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
-            impo_idx = st.selectbox("Ruta IMPO sugerida", candidatos.index.tolist(),
-                                    format_func=lambda x: f"{candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
+            impo_idx = st.selectbox("Ruta IMPO sugerida", candidatos.index,
+                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
             ruta_secundaria = candidatos.loc[impo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
 
     if st.button("🚛 Simular Vuelta Redonda"):
         ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
-        costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
-
-        utilidad_bruta = ingreso_total - costo_total_general
+        costo_total = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
+        utilidad_bruta = ingreso_total - costo_total
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
-        porcentaje_utilidad_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-        porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+        pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-        # 📄 Detalle de Rutas
         st.markdown("---")
         st.markdown("## 📄 Detalle de Rutas")
         for r in rutas_seleccionadas:
             st.markdown(f"""
-**{r['Tipo']} — {r.get('Cliente', 'nan')}**  
-- {r['Origen']} → {r['Destino']}  
-- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}  
-- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}
+**{r['Tipo']} — {r.get('Cliente', '')}**  
+{r['Origen']} → {r['Destino']}  
+Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}  
+Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}  
 """)
 
-        # 📊 Resultado General
         st.markdown("---")
         st.markdown("## 📊 Resultado General")
+        st.write(f"Ingreso Total: ${ingreso_total:,.2f}")
+        st.write(f"Costo Total: ${costo_total:,.2f}")
+        st.write(f"Utilidad Bruta: ${utilidad_bruta:,.2f} ({pct_bruta:.2f}%)")
+        st.write(f"Costos Indirectos (35%): ${costos_indirectos:,.2f}")
+        st.write(f"Utilidad Neta: ${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
 
-        color_bruta = "green" if utilidad_bruta >= 0 else "red"
-        color_neta = "green" if utilidad_neta >= 0 else "red"
-        color_pct_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
-        color_pct_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
-
-        st.markdown(f"**Ingreso Total:** <span style='font-weight:bold'>${ingreso_total:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"**Costo Total:** <span style='font-weight:bold'>${costo_total_general:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_pct_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
-        st.markdown(f"**Costos Indirectos (35%):** <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_pct_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
-
-        # 📋 Resumen de Rutas
         st.markdown("---")
         st.markdown("## 📋 Resumen de Rutas")
         tipos = ["IMPO", "VACIO", "EXPO"]
-        columnas = st.columns(3)
+        cols = st.columns(3)
 
         def resumen_ruta(r):
             return [
@@ -153,10 +147,10 @@ if os.path.exists(RUTA_RUTAS):
             ]
 
         for i, tipo in enumerate(tipos):
-            with columnas[i]:
+            with cols[i]:
                 st.markdown(f"**{tipo}**")
                 ruta = next((r for r in rutas_seleccionadas if r["Tipo"] == tipo), None)
-                if ruta is not None:
+                if ruta:
                     for line in resumen_ruta(ruta):
                         st.write(line)
                 else:
