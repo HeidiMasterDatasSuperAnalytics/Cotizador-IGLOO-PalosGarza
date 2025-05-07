@@ -4,7 +4,7 @@ import os
 
 RUTA_RUTAS = "rutas_guardadas.csv"
 
-st.title("🛁 Simulador de Vuelta Redonda")
+st.title("🔁 Simulador de Vuelta Redonda")
 
 def safe_number(x):
     return 0 if (x is None or (isinstance(x, float) and pd.isna(x))) else x
@@ -26,10 +26,9 @@ if os.path.exists(RUTA_RUTAS):
 
     if tipo_principal == "IMPO":
         rutas_unicas = impo_rutas[["Origen", "Destino"]].drop_duplicates()
-        idx = st.selectbox("Selecciona ruta IMPO", rutas_unicas.index,
-                          format_func=lambda x: f"{rutas_unicas.loc[x, 'Origen']} → {rutas_unicas.loc[x, 'Destino']}")
-        origen = rutas_unicas.loc[idx, "Origen"]
-        destino = rutas_unicas.loc[idx, "Destino"]
+        opciones_ruta = list(rutas_unicas.itertuples(index=False, name=None))
+        ruta_sel = st.selectbox("Selecciona ruta IMPO", opciones_ruta, format_func=lambda x: f"{x[0]} → {x[1]}")
+        origen, destino = ruta_sel
         candidatas = impo_rutas[(impo_rutas["Origen"] == origen) & (impo_rutas["Destino"] == destino)].copy()
         candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
         candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
@@ -62,10 +61,9 @@ if os.path.exists(RUTA_RUTAS):
 
     else:  # EXPO
         rutas_unicas = expo_rutas[["Origen", "Destino"]].drop_duplicates()
-        idx = st.selectbox("Selecciona ruta EXPO", rutas_unicas.index,
-                          format_func=lambda x: f"{rutas_unicas.loc[x, 'Origen']} → {rutas_unicas.loc[x, 'Destino']}")
-        origen = rutas_unicas.loc[idx, "Origen"]
-        destino = rutas_unicas.loc[idx, "Destino"]
+        opciones_ruta = list(rutas_unicas.itertuples(index=False, name=None))
+        ruta_sel = st.selectbox("Selecciona ruta EXPO", opciones_ruta, format_func=lambda x: f"{x[0]} → {x[1]}")
+        origen, destino = ruta_sel
         candidatas = expo_rutas[(expo_rutas["Origen"] == origen) & (expo_rutas["Destino"] == destino)].copy()
         candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
         candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
@@ -96,10 +94,12 @@ if os.path.exists(RUTA_RUTAS):
             ruta_secundaria = candidatos.loc[impo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
 
+    # 🔁 Simulación y visualización
     if st.button("🚛 Simular Vuelta Redonda"):
         ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
-        costo_total = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
-        utilidad_bruta = ingreso_total - costo_total
+        costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
+
+        utilidad_bruta = ingreso_total - costo_total_general
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
         pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
@@ -108,20 +108,18 @@ if os.path.exists(RUTA_RUTAS):
         st.markdown("---")
         st.markdown("## 📄 Detalle de Rutas")
         for r in rutas_seleccionadas:
-            st.markdown(f"""
-**{r['Tipo']} — {r.get('Cliente', '')}**  
-{r['Origen']} → {r['Destino']}  
-Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}  
-Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}  
-""")
+            st.markdown(f"**{r['Tipo']} — {r.get('Cliente', 'nan')}**")
+            st.markdown(f"- {r['Origen']} → {r['Destino']}")
+            st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
+            st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
 
         st.markdown("---")
         st.markdown("## 📊 Resultado General")
-        st.write(f"Ingreso Total: ${ingreso_total:,.2f}")
-        st.write(f"Costo Total: ${costo_total:,.2f}")
-        st.write(f"Utilidad Bruta: ${utilidad_bruta:,.2f} ({pct_bruta:.2f}%)")
-        st.write(f"Costos Indirectos (35%): ${costos_indirectos:,.2f}")
-        st.write(f"Utilidad Neta: ${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
+        st.markdown(f"**Ingreso Total:** ${ingreso_total:,.2f}")
+        st.markdown(f"**Costo Total:** ${costo_total_general:,.2f}")
+        st.markdown(f"**Utilidad Bruta:** ${utilidad_bruta:,.2f} ({pct_bruta:.2f}%)")
+        st.markdown(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+        st.markdown(f"**Utilidad Neta:** ${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
 
         st.markdown("---")
         st.markdown("## 📋 Resumen de Rutas")
