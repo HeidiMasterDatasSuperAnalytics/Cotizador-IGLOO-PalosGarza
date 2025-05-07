@@ -31,9 +31,10 @@ if os.path.exists(RUTA_RUTAS):
         origen, destino = ruta_sel
         candidatas = impo_rutas[(impo_rutas["Origen"] == origen) & (impo_rutas["Destino"] == destino)].copy()
         candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
-        candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
-        sel = st.selectbox("Cliente (ordenado por utilidad)", candidatas.index,
-                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} (${candidatas.loc[x, 'Utilidad']:.2f})")
+        candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
+        candidatas = candidatas.sort_values(by="% Utilidad", ascending=False)
+        sel = st.selectbox("Cliente (ordenado por % utilidad)", candidatas.index,
+                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} ({candidatas.loc[x, '% Utilidad']:.2f}%)")
         ruta_principal = candidatas.loc[sel]
         rutas_seleccionadas.append(ruta_principal)
 
@@ -53,9 +54,10 @@ if os.path.exists(RUTA_RUTAS):
         candidatos = expo_rutas[expo_rutas["Origen"] == origen_expo].copy()
         if not candidatos.empty:
             candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
-            candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
+            candidatos["% Utilidad"] = (candidatos["Utilidad"] / candidatos["Ingreso Total"] * 100).round(2)
+            candidatos = candidatos.sort_values(by="% Utilidad", ascending=False)
             expo_idx = st.selectbox("Ruta EXPO sugerida", candidatos.index,
-                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
+                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} ({candidatos.loc[x, '% Utilidad']:.2f}%)")
             ruta_secundaria = candidatos.loc[expo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
 
@@ -66,9 +68,10 @@ if os.path.exists(RUTA_RUTAS):
         origen, destino = ruta_sel
         candidatas = expo_rutas[(expo_rutas["Origen"] == origen) & (expo_rutas["Destino"] == destino)].copy()
         candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
-        candidatas = candidatas.sort_values(by="Utilidad", ascending=False)
-        sel = st.selectbox("Cliente (ordenado por utilidad)", candidatas.index,
-                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} (${candidatas.loc[x, 'Utilidad']:.2f})")
+        candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
+        candidatas = candidatas.sort_values(by="% Utilidad", ascending=False)
+        sel = st.selectbox("Cliente (ordenado por % utilidad)", candidatas.index,
+                           format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} ({candidatas.loc[x, '% Utilidad']:.2f}%)")
         ruta_principal = candidatas.loc[sel]
         rutas_seleccionadas.append(ruta_principal)
 
@@ -88,9 +91,10 @@ if os.path.exists(RUTA_RUTAS):
         candidatos = impo_rutas[impo_rutas["Origen"] == origen_impo].copy()
         if not candidatos.empty:
             candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
-            candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
+            candidatos["% Utilidad"] = (candidatos["Utilidad"] / candidatos["Ingreso Total"] * 100).round(2)
+            candidatos = candidatos.sort_values(by="% Utilidad", ascending=False)
             impo_idx = st.selectbox("Ruta IMPO sugerida", candidatos.index,
-                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})")
+                                    format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} ({candidatos.loc[x, '% Utilidad']:.2f}%)")
             ruta_secundaria = candidatos.loc[impo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
 
