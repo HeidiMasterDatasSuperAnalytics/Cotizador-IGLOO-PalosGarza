@@ -20,18 +20,28 @@ if os.path.exists(RUTA_RUTAS):
     
     tipo_principal = st.selectbox("Selecciona tipo principal", ["IMPO", "EXPO"])
 
+    ruta_sugerida = None  # Inicializar
+
     if tipo_principal == "IMPO":
         cliente_impo = st.selectbox("Cliente Importación", impo_rutas["Cliente"].dropna().unique())
         rutas_impo = impo_rutas[impo_rutas["Cliente"] == cliente_impo]
         impo_sel = st.selectbox("Ruta IMPO", rutas_impo.index.tolist(), format_func=lambda x: f"{rutas_impo.loc[x, 'Origen']} → {rutas_impo.loc[x, 'Destino']}")
         ruta_principal = rutas_impo.loc[impo_sel]
 
+        # 🔍 Sugerencia automática de EXPO conectada
+        destino_ref = ruta_principal["Destino"]
+        candidatos = expo_rutas[expo_rutas["Origen"] == destino_ref].copy()
+        candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
+        candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
+
         usar_expo = st.checkbox("¿Agregar ruta EXPO?")
-        if usar_expo and not expo_rutas.empty:
-            cliente_expo = st.selectbox("Cliente Exportación", expo_rutas["Cliente"].dropna().unique())
-            rutas_expo = expo_rutas[expo_rutas["Cliente"] == cliente_expo]
-            expo_sel = st.selectbox("Ruta EXPO", rutas_expo.index.tolist(), format_func=lambda x: f"{rutas_expo.loc[x, 'Origen']} → {rutas_expo.loc[x, 'Destino']}")
-            ruta_expo = rutas_expo.loc[expo_sel]
+        if usar_expo and not candidatos.empty:
+            ruta_sugerida_sel = st.selectbox(
+                "Ruta EXPO sugerida (ordenada por utilidad)",
+                candidatos.index.tolist(),
+                format_func=lambda x: f"{candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})"
+            )
+            ruta_expo = candidatos.loc[ruta_sugerida_sel]
         else:
             ruta_expo = None
 
@@ -48,12 +58,20 @@ if os.path.exists(RUTA_RUTAS):
         expo_sel = st.selectbox("Ruta EXPO", rutas_expo.index.tolist(), format_func=lambda x: f"{rutas_expo.loc[x, 'Origen']} → {rutas_expo.loc[x, 'Destino']}")
         ruta_principal = rutas_expo.loc[expo_sel]
 
+        # 🔍 Sugerencia automática de IMPO conectada
+        destino_ref = ruta_principal["Destino"]
+        candidatos = impo_rutas[impo_rutas["Origen"] == destino_ref].copy()
+        candidatos["Utilidad"] = candidatos["Ingreso Total"] - candidatos["Costo_Total_Ruta"]
+        candidatos = candidatos.sort_values(by="Utilidad", ascending=False)
+
         usar_impo = st.checkbox("¿Agregar ruta IMPO?")
-        if usar_impo and not impo_rutas.empty:
-            cliente_impo = st.selectbox("Cliente Importación", impo_rutas["Cliente"].dropna().unique())
-            rutas_impo = impo_rutas[impo_rutas["Cliente"] == cliente_impo]
-            impo_sel = st.selectbox("Ruta IMPO", rutas_impo.index.tolist(), format_func=lambda x: f"{rutas_impo.loc[x, 'Origen']} → {rutas_impo.loc[x, 'Destino']}")
-            ruta_impo = rutas_impo.loc[impo_sel]
+        if usar_impo and not candidatos.empty:
+            ruta_sugerida_sel = st.selectbox(
+                "Ruta IMPO sugerida (ordenada por utilidad)",
+                candidatos.index.tolist(),
+                format_func=lambda x: f"{candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} (${candidatos.loc[x, 'Utilidad']:.2f})"
+            )
+            ruta_impo = candidatos.loc[ruta_sugerida_sel]
         else:
             ruta_impo = None
 
@@ -66,12 +84,11 @@ if os.path.exists(RUTA_RUTAS):
 
     if st.button("🚛 Simular Vuelta Redonda"):
         rutas_seleccionadas = [ruta_principal]
-        if tipo_principal == "IMPO":
-            if ruta_expo is not None:
-                rutas_seleccionadas.append(ruta_expo)
-        else:
-            if ruta_impo is not None:
-                rutas_seleccionadas.append(ruta_impo)
+        if tipo_principal == "IMPO" and 'ruta_expo' in locals() and ruta_expo is not None:
+            rutas_seleccionadas.append(ruta_expo)
+        elif tipo_principal == "EXPO" and 'ruta_impo' in locals() and ruta_impo is not None:
+            rutas_seleccionadas.append(ruta_impo)
+
         if 'ruta_vacio' in locals() and ruta_vacio is not None:
             rutas_seleccionadas.append(ruta_vacio)
 
@@ -93,3 +110,4 @@ if os.path.exists(RUTA_RUTAS):
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
+
