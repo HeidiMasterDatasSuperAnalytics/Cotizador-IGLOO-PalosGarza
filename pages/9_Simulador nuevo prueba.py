@@ -141,6 +141,9 @@ if os.path.exists(RUTA_RUTAS):
                 f"Sueldo: ${safe_number(r.get('Sueldo_Operador')):,.2f}",
                 f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
                 f"Costo Cruce Convertido: ${safe_number(r.get('Costo Cruce Convertido')):,.2f}",
+                f"Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}",
+                f"Moneda: {r.get('Moneda_Ingreso', 'N/A')}",
+                f"Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}",
                 "**Extras detallados:**",
                 f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
                 f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
@@ -155,7 +158,7 @@ if os.path.exists(RUTA_RUTAS):
             with cols[i]:
                 st.markdown(f"**{tipo}**")
                 ruta = next((r for r in rutas_seleccionadas if r["Tipo"] == tipo), None)
-                if ruta:
+                if ruta is not None:
                     for line in resumen_ruta(ruta):
                         st.write(line)
                 else:
