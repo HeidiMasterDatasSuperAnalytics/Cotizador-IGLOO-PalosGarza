@@ -114,6 +114,9 @@ if os.path.exists(RUTA_RUTAS):
         for r in rutas_seleccionadas:
             st.markdown(f"**{r['Tipo']} — {r.get('Cliente', 'nan')}**")
             st.markdown(f"- {r['Origen']} → {r['Destino']}")
+            st.markdown(f"- Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}")
+            st.markdown(f"- Moneda: {r.get('Moneda_Ingreso', 'N/A')}")
+            st.markdown(f"- Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}")
             st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
             st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
 
