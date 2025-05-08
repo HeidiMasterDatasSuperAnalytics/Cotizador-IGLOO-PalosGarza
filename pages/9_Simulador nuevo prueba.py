@@ -122,11 +122,22 @@ if os.path.exists(RUTA_RUTAS):
 
         st.markdown("---")
         st.markdown("## 📊 Resultado General")
-        st.markdown(f"**Ingreso Total:** ${ingreso_total:,.2f}")
-        st.markdown(f"**Costo Total:** ${costo_total_general:,.2f}")
-        st.markdown(f"**Utilidad Bruta:** ${utilidad_bruta:,.2f} ({pct_bruta:.2f}%)")
-        st.markdown(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
-        st.markdown(f"**Utilidad Neta:** ${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
+        st.markdown(f"<strong>Ingreso Total:</strong> <span style='font-weight:bold'>${ingreso_total:,.2f}</span>", unsafe_allow_html=True)
+        st.markdown(f"<strong>Costo Total:</strong> <span style='font-weight:bold'>${costo_total_general:,.2f}</span>", unsafe_allow_html=True)
+
+        color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
+        st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
+
+        color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
+        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
+
+        st.markdown(f"<strong>Costos Indirectos (35%):</strong> <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
+
+        color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
+        st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_utilidad_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
+
+        color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
+        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown("## 📋 Resumen de Rutas")
