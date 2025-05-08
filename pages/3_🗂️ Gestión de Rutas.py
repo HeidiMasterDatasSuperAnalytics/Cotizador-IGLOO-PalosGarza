@@ -82,20 +82,24 @@ if os.path.exists(RUTA_RUTAS):
                 ingreso_total = ingreso_flete_convertido + ingreso_cruce_convertido
                 costo_cruce_convertido = costo_cruce * tipo_cambio_costo_cruce
 
-                costo_diesel_camion = (km / valores["Rendimiento Camion"]) * valores["Costo Diesel"]
-                costo_diesel_termo = horas_termo * valores["Rendimiento Termo"] * valores["Costo Diesel"]
+                rendimiento_camion = valores.get("Rendimiento Camion", 1)
+                costo_diesel = valores.get("Costo Diesel", 1)
+                rendimiento_termo = valores.get("Rendimiento Termo", 1)
+
+                costo_diesel_camion = (km / rendimiento_camion) * costo_diesel
+                costo_diesel_termo = horas_termo * rendimiento_termo * costo_diesel
 
                 if tipo == "IMPO":
-                    pago_km = valores["Pago x km IMPO"]
+                    pago_km = valores.get("Pago x km IMPO", 2.1)
                     sueldo = km * pago_km
-                    bono = valores["Bono ISR IMSS"]
+                    bono = valores.get("Bono ISR IMSS", 0)
                 elif tipo == "EXPO":
-                    pago_km = valores["Pago x km EXPO"]
+                    pago_km = valores.get("Pago x km EXPO", 2.5)
                     sueldo = km * pago_km
-                    bono = valores["Bono ISR IMSS"]
+                    bono = valores.get("Bono ISR IMSS", 0)
                 else:
                     pago_km = 0.0
-                    sueldo = valores["Pago fijo VACIO"]
+                    sueldo = valores.get("Pago fijo VACIO", 200.0)
                     bono = 0.0
 
                 extras = sum([
@@ -142,5 +146,7 @@ if os.path.exists(RUTA_RUTAS):
 
                 df.to_csv(RUTA_RUTAS, index=False)
                 st.success("✅ Ruta actualizada exitosamente.")
+                st.stop()
+
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
