@@ -97,59 +97,41 @@ if os.path.exists(RUTA_RUTAS):
                                     format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} ({candidatos.loc[x, '% Utilidad']:.2f}%)")
             ruta_secundaria = candidatos.loc[impo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
-         
-         if st.button("🚛 Simular Vuelta Redonda"):
-        ruta_impo = rutas_impo.loc[impo_sel]
-        ruta_expo = rutas_expo.loc[expo_sel]
-        ruta_vacio = vacio_rutas.loc[vacio_sel] if vacio_sel is not None else None
 
-        rutas_seleccionadas = [ruta_impo]
-        if ruta_vacio is not None:
-            rutas_seleccionadas.append(ruta_vacio)
-        rutas_seleccionadas.append(ruta_expo)
-
+    # 🔁 Simulación y visualización
+    if st.button("🚛 Simular Vuelta Redonda"):
         ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
         costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
-
-        st.subheader("🧾 Detalle de Rutas")
-        for ruta in rutas_seleccionadas:
-            st.markdown(f"""
-            **{ruta['Tipo']} — {ruta['Cliente']}**  
-            - {ruta['Origen']} → {ruta['Destino']}  
-            - Ingreso Total: ${safe_number(ruta['Ingreso Total']):,.2f}  
-            - Costo Total Ruta: ${safe_number(ruta['Costo_Total_Ruta']):,.2f}
-            """)
 
         utilidad_bruta = ingreso_total - costo_total_general
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
-        porcentaje_utilidad_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-        porcentaje_utilidad_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+        pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.markdown("---")
-        st.subheader("📊 Resultado General")
-
-        st.markdown(f"<strong>Ingreso Total:</strong> <span style='font-weight:bold'>${ingreso_total:,.2f}</span>", unsafe_allow_html=True)
-        st.markdown(f"<strong>Costo Total:</strong> <span style='font-weight:bold'>${costo_total_general:,.2f}</span>", unsafe_allow_html=True)
-
-        color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
-        st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
-
-        color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
-        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
-
-        st.markdown(f"<strong>Costos Indirectos (35%):</strong> <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
-
-        color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
-        st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_utilidad_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
-
-        color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
-        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
+        st.markdown("## 📄 Detalle de Rutas")
+        for r in rutas_seleccionadas:
+            st.markdown(f"**{r['Tipo']} — {r.get('Cliente', 'nan')}**")
+            st.markdown(f"- {r['Origen']} → {r['Destino']}")
+            st.markdown(f"- Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}")
+            st.markdown(f"- Moneda: {r.get('Moneda_Ingreso', 'N/A')}")
+            st.markdown(f"- Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}")
+            st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
+            st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
 
         st.markdown("---")
-        st.subheader("📋 Resumen de Rutas")
+        st.markdown("## 📊 Resultado General")
+        st.markdown(f"**Ingreso Total:** ${ingreso_total:,.2f}")
+        st.markdown(f"**Costo Total:** ${costo_total_general:,.2f}")
+        st.markdown(f"**Utilidad Bruta:** ${utilidad_bruta:,.2f} ({pct_bruta:.2f}%)")
+        st.markdown(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+        st.markdown(f"**Utilidad Neta:** ${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
 
-        col1, col2, col3 = st.columns(3)
+        st.markdown("---")
+        st.markdown("## 📋 Resumen de Rutas")
+        tipos = ["IMPO", "VACIO", "EXPO"]
+        cols = st.columns(3)
 
         def resumen_ruta(r):
             return [
@@ -159,6 +141,9 @@ if os.path.exists(RUTA_RUTAS):
                 f"Sueldo: ${safe_number(r.get('Sueldo_Operador')):,.2f}",
                 f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
                 f"Costo Cruce Convertido: ${safe_number(r.get('Costo Cruce Convertido')):,.2f}",
+                f"Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}",
+                f"Moneda: {r.get('Moneda_Ingreso', 'N/A')}",
+                f"Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}",
                 "**Extras detallados:**",
                 f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
                 f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
@@ -169,23 +154,15 @@ if os.path.exists(RUTA_RUTAS):
                 f"Renta Termo: ${safe_number(r.get('Renta_Termo')):,.2f}"
             ]
 
-        with col1:
-            st.markdown("**IMPO**")
-            for line in resumen_ruta(ruta_impo):
-                st.write(line)
-
-        with col2:
-            st.markdown("**VACÍO**")
-            if ruta_vacio is not None:
-                for line in resumen_ruta(ruta_vacio):
-                    st.write(line)
-            else:
-                st.write("No aplica")
-
-        with col3:
-            st.markdown("**EXPO**")
-            for line in resumen_ruta(ruta_expo):
-                st.write(line)
+        for i, tipo in enumerate(tipos):
+            with cols[i]:
+                st.markdown(f"**{tipo}**")
+                ruta = next((r for r in rutas_seleccionadas if r["Tipo"] == tipo), None)
+                if ruta is not None:
+                    for line in resumen_ruta(ruta):
+                        st.write(line)
+                else:
+                    st.write("No aplica")
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
