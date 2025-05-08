@@ -146,7 +146,7 @@ if os.path.exists(RUTA_RUTAS):
 
                 df.to_csv(RUTA_RUTAS, index=False)
                 st.success("✅ Ruta actualizada exitosamente.")
-                st.experimental_rerun()
+                st.stop()
 
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
