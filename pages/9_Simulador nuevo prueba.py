@@ -97,20 +97,21 @@ if os.path.exists(RUTA_RUTAS):
                                     format_func=lambda x: f"{candidatos.loc[x, 'Cliente']} - {candidatos.loc[x, 'Origen']} → {candidatos.loc[x, 'Destino']} ({candidatos.loc[x, '% Utilidad']:.2f}%)")
             ruta_secundaria = candidatos.loc[impo_idx]
             rutas_seleccionadas.append(ruta_secundaria)
+         
+         if st.button("🚛 Simular Vuelta Redonda"):
+        ruta_impo = rutas_impo.loc[impo_sel]
+        ruta_expo = rutas_expo.loc[expo_sel]
+        ruta_vacio = vacio_rutas.loc[vacio_sel] if vacio_sel is not None else None
 
-    # 🔁 Simulación y visualización
-    if st.button("🚛 Simular Vuelta Redonda"):
+        rutas_seleccionadas = [ruta_impo]
+        if ruta_vacio is not None:
+            rutas_seleccionadas.append(ruta_vacio)
+        rutas_seleccionadas.append(ruta_expo)
+
         ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
         costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
 
-        utilidad_bruta = ingreso_total - costo_total_general
-        costos_indirectos = ingreso_total * 0.35
-        utilidad_neta = utilidad_bruta - costos_indirectos
-        pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-        pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
-
-
-       st.subheader("🧾 Detalle de Rutas")
+        st.subheader("🧾 Detalle de Rutas")
         for ruta in rutas_seleccionadas:
             st.markdown(f"""
             **{ruta['Tipo']} — {ruta['Cliente']}**  
