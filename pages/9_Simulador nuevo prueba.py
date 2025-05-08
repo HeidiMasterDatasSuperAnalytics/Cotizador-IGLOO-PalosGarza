@@ -120,7 +120,7 @@ if os.path.exists(RUTA_RUTAS):
             st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
             st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
 
-        t.markdown("---")
+        st.markdown("---")
         st.subheader("📊 Resultado General")
 
         st.markdown(f"<strong>Ingreso Total:</strong> <span style='font-weight:bold'>${ingreso_total:,.2f}</span>", unsafe_allow_html=True)
