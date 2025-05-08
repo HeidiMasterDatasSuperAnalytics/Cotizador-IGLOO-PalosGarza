@@ -158,19 +158,5 @@ if os.path.exists(RUTA_RUTAS):
                 else:
                     st.write("No aplica")
 
-        # Exportar a PDF
-        st.markdown("---")
-        st.markdown("## 📤 Exportar a PDF")
-        if st.button("Descargar resultado en PDF"):
-            html = generar_html_detalle(rutas_seleccionadas, ingreso_total, costo_total_general,
-                                        utilidad_bruta, pct_bruta, costos_indirectos, utilidad_neta, pct_neta)
-            ruta_pdf = "simulacion_rutas.pdf"
-            try:
-                pdfkit.from_string(html, ruta_pdf)
-                with open(ruta_pdf, "rb") as f:
-                    st.download_button("📄 Descargar PDF", f, file_name=ruta_pdf)
-            except Exception as e:
-                st.error(f"Error al generar PDF: {e}")
-
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
