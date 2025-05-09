@@ -76,64 +76,85 @@ with st.form("registro_trafico"):
             st.success("✅ Tráfico registrado exitosamente.")
 
 # =====================================
-# 2. COMPLETAR TRÁFICO + SIMULACIÓN
+# 2. VER, EDITAR, ELIMINAR
+# =====================================
+if os.path.exists(RUTA_PROG):
+    df_prog = pd.read_csv(RUTA_PROG)
+    st.markdown("---")
+    st.subheader("📋 Programaciones Registradas")
+
+    if "ID_Programacion" in df_prog.columns:
+        st.dataframe(df_prog, use_container_width=True)
+
+        ids = df_prog["ID_Programacion"].dropna().unique()
+        id_edit = st.selectbox("Selecciona un tráfico para editar o eliminar", ids)
+        df_filtrado = df_prog[df_prog["ID_Programacion"] == id_edit].reset_index()
+        st.write("**Vista previa del tráfico seleccionado:**")
+        st.dataframe(df_filtrado)
+
+        if st.button("🗑️ Eliminar tráfico completo"):
+            df_prog = df_prog[df_prog["ID_Programacion"] != id_edit]
+            df_prog.to_csv(RUTA_PROG, index=False)
+            st.success("✅ Tráfico eliminado exitosamente.")
+            st.experimental_rerun()
+
+        tramo_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"].iloc[0]
+        with st.form("editar_trafico"):
+            nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
+            nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
+            editar_btn = st.form_submit_button("💾 Guardar cambios")
+
+            if editar_btn:
+                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
+                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
+                df_prog.to_csv(RUTA_PROG, index=False)
+                st.success("✅ Cambios guardados exitosamente.")
+
+# =====================================
+# 3. COMPLETAR Y SIMULAR TRÁFICO
 # =====================================
 st.markdown("---")
-st.header("🔁 Completar y Simular Tráfico - Persona 2")
+st.header("🔁 Completar y Simular Tráfico")
 
 if os.path.exists(RUTA_PROG):
-    prog_df = pd.read_csv(RUTA_PROG)
+    df_prog = pd.read_csv(RUTA_PROG)
+    if "ID_Programacion" in df_prog.columns:
+        incompletos = df_prog.groupby("ID_Programacion").size().reset_index(name="count")
+        incompletos = incompletos[incompletos["count"] == 1]["ID_Programacion"]
 
-    if "ID_Programacion" not in prog_df.columns:
-        st.warning("⚠️ No se encontró la columna 'ID_Programacion'.")
-    else:
-        pendientes = prog_df.groupby("ID_Programacion").size().reset_index(name="tramos")
-        pendientes = pendientes[pendientes["tramos"] == 1]
-
-        if pendientes.empty:
-            st.info("No hay programaciones pendientes por completar.")
-        else:
-            id_sel = st.selectbox("Selecciona un tráfico pendiente", pendientes["ID_Programacion"])
-            ida = prog_df[prog_df["ID_Programacion"] == id_sel].iloc[0]
+        if not incompletos.empty:
+            id_sel = st.selectbox("Selecciona un tráfico pendiente", incompletos)
+            ida = df_prog[df_prog["ID_Programacion"] == id_sel].iloc[0]
+            rutas_df = cargar_rutas()
             destino_ida = ida["Destino"]
             tipo_ida = ida["Tipo"]
 
-            st.markdown(f"**Destino final del tramo registrado:** `{destino_ida}`")
-
-            rutas_df = cargar_rutas()
             tipo_regreso = "EXPO" if tipo_ida == "IMPO" else "IMPO"
-            candidatas = rutas_df[(rutas_df["Tipo"] == tipo_regreso) & (rutas_df["Origen"] == destino_ida)].copy()
-            candidatas = candidatas.sort_values(by="% Utilidad", ascending=False)
-            vacias = rutas_df[(rutas_df["Tipo"] == "VACIO") & (rutas_df["Origen"] == destino_ida)].copy()
+            directas = rutas_df[(rutas_df["Tipo"] == tipo_regreso) & (rutas_df["Origen"] == destino_ida)]
+            vacias = rutas_df[(rutas_df["Tipo"] == "VACIO") & (rutas_df["Origen"] == destino_ida)]
 
-            st.markdown("### 🚛 Opciones de Regreso")
             ruta_vuelta = None
-            if not candidatas.empty:
-                idx = st.selectbox("Cliente sugerido (ordenado por % utilidad)", candidatas.index,
-                    format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} ({candidatas.loc[x, '% Utilidad']:.2f}%)")
-                ruta_vuelta = candidatas.loc[idx]
+            if not directas.empty:
+                directas = directas.sort_values(by="% Utilidad", ascending=False)
+                idx = st.selectbox("Cliente sugerido (por utilidad)", directas.index,
+                    format_func=lambda x: f"{directas.loc[x, 'Cliente']} ({directas.loc[x, '% Utilidad']:.2f}%)")
+                ruta_vuelta = directas.loc[idx]
             elif not vacias.empty:
-                idx = st.selectbox("Ruta VACÍA disponible", vacias.index,
+                vacias = vacias.sort_values(by="% Utilidad", ascending=False)
+                idx = st.selectbox("Ruta VACÍA", vacias.index,
                     format_func=lambda x: f"{vacias.loc[x, 'Origen']} → {vacias.loc[x, 'Destino']}")
                 ruta_vuelta = vacias.loc[idx]
-            else:
-                st.warning("No hay rutas disponibles de regreso desde este destino.")
 
             if ruta_vuelta is not None:
-                st.markdown("### 📊 Simulación del Viaje Completo")
                 ingreso_total = safe_number(ida["Ingreso Total"]) + safe_number(ruta_vuelta["Ingreso Total"])
                 costo_total = safe_number(ida["Costo_Total_Ruta"]) + safe_number(ruta_vuelta["Costo_Total_Ruta"])
                 utilidad = ingreso_total - costo_total
-                utilidad_neta = utilidad - (ingreso_total * 0.35)
-                pct_bruta = (utilidad / ingreso_total * 100) if ingreso_total > 0 else 0
-                pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
-
+                utilidad_neta = utilidad - ingreso_total * 0.35
                 st.metric("Ingreso Total", f"${ingreso_total:,.2f}")
                 st.metric("Costo Total", f"${costo_total:,.2f}")
-                st.metric("Utilidad Bruta", f"${utilidad:,.2f} ({pct_bruta:.2f}%)")
-                st.metric("Utilidad Neta", f"${utilidad_neta:,.2f} ({pct_neta:.2f}%)")
+                st.metric("Utilidad Neta", f"${utilidad_neta:,.2f}")
 
-                if st.button("💾 Concluir Tráfico con esta Vuelta"):
+                if st.button("💾 Guardar y cerrar tráfico"):
                     datos = ruta_vuelta.copy()
                     datos["Fecha"] = ida["Fecha"]
                     datos["Número_Trafico"] = ida["Número_Trafico"]
@@ -142,42 +163,4 @@ if os.path.exists(RUTA_PROG):
                     datos["Tramo"] = "VUELTA"
                     datos["ID_Programacion"] = ida["ID_Programacion"]
                     guardar_programacion(pd.DataFrame([datos]))
-                    st.success("✅ Tráfico concluido exitosamente.")
-else:
-    st.info("No hay programación previa registrada.")
-
-# =====================================
-# 3. TRÁFICOS CONCLUIDOS
-# =====================================
-st.markdown("---")
-st.subheader("✅ Tráficos Concluidos")
-
-if os.path.exists(RUTA_PROG):
-    df = pd.read_csv(RUTA_PROG)
-    df["Utilidad"] = df["Ingreso Total"] - df["Costo_Total_Ruta"]
-    completos = df.groupby("ID_Programacion").size().reset_index(name="Tramos")
-    ids_completos = completos[completos["Tramos"] == 2]["ID_Programacion"]
-    df_completos = df[df["ID_Programacion"].isin(ids_completos)].copy()
-
-    if not df_completos.empty:
-        resumen = df_completos.groupby("ID_Programacion").agg({
-            "Ingreso Total": "sum",
-            "Costo_Total_Ruta": "sum",
-            "Utilidad": "sum"
-        }).reset_index()
-
-        resumen["% Utilidad Bruta"] = (resumen["Utilidad"] / resumen["Ingreso Total"] * 100).round(2)
-        resumen["Costos Indirectos"] = resumen["Ingreso Total"] * 0.35
-        resumen["Utilidad Neta"] = resumen["Utilidad"] - resumen["Costos Indirectos"]
-        resumen["% Utilidad Neta"] = (resumen["Utilidad Neta"] / resumen["Ingreso Total"] * 100).round(2)
-
-        st.download_button(
-            label="📥 Descargar tráficos concluidos",
-            data=resumen.to_csv(index=False),
-            file_name="traficos_concluidos.csv",
-            mime="text/csv"
-        )
-
-        st.dataframe(resumen, use_container_width=True)
-    else:
-        st.info("Aún no hay tramos concluidos.")
+                    st.success("✅ Tráfico cerrado.")
