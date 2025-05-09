@@ -106,7 +106,7 @@ if os.path.exists(RUTA_RUTAS):
         utilidad_bruta = ingreso_total - costo_total_general
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
-        color_porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
         pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.markdown("---")
