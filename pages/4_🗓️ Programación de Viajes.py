@@ -161,7 +161,7 @@ if not incompletos.empty:
 else:
     st.info("No hay tráficos pendientes.")
 
-st.title("✅ Tráficos Concluidos")
+st.title("✅ Tráficos Concluidos con Filtro de Fechas")
 
 if not os.path.exists(RUTA_PROG):
     st.error("❌ No se encontró el archivo de viajes programados.")
@@ -177,26 +177,36 @@ if concluidos.empty:
     st.info("Aún no hay tráficos concluidos.")
 else:
     df_concluidos = df[df["ID_Programacion"].isin(concluidos)].copy()
+    df_concluidos["Fecha"] = pd.to_datetime(df_concluidos["Fecha"])
 
-    # Agrupar por ID de programación
-    resumen = df_concluidos.groupby(["ID_Programacion", "Número_Trafico", "Fecha"]).agg({
-        "Ingreso Total": "sum",
-        "Costo_Total_Ruta": "sum"
-    }).reset_index()
+    st.subheader("📅 Filtro por Fecha")
+    fecha_inicio = st.date_input("Fecha inicio", value=df_concluidos["Fecha"].min().date())
+    fecha_fin = st.date_input("Fecha fin", value=df_concluidos["Fecha"].max().date())
 
-    resumen["Utilidad Bruta"] = resumen["Ingreso Total"] - resumen["Costo_Total_Ruta"]
-    resumen["% Utilidad Bruta"] = (resumen["Utilidad Bruta"] / resumen["Ingreso Total"] * 100).round(2)
-    resumen["Costos Indirectos (35%)"] = (resumen["Ingreso Total"] * 0.35).round(2)
-    resumen["Utilidad Neta"] = resumen["Utilidad Bruta"] - resumen["Costos Indirectos (35%)"]
-    resumen["% Utilidad Neta"] = (resumen["Utilidad Neta"] / resumen["Ingreso Total"] * 100).round(2)
+    filtro = (df_concluidos["Fecha"] >= pd.to_datetime(fecha_inicio)) & (df_concluidos["Fecha"] <= pd.to_datetime(fecha_fin))
+    df_filtrado = df_concluidos[filtro]
 
-    st.subheader("📋 Resumen de Viajes Concluidos")
-    st.dataframe(resumen, use_container_width=True)
+    if df_filtrado.empty:
+        st.warning("No hay tráficos concluidos en ese rango de fechas.")
+    else:
+        resumen = df_filtrado.groupby(["ID_Programacion", "Número_Trafico", "Fecha"]).agg({
+            "Ingreso Total": "sum",
+            "Costo_Total_Ruta": "sum"
+        }).reset_index()
 
-    csv = resumen.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "📥 Descargar Resumen en CSV",
-        data=csv,
-        file_name="resumen_traficos_concluidos.csv",
-        mime="text/csv"
-    )
+        resumen["Utilidad Bruta"] = resumen["Ingreso Total"] - resumen["Costo_Total_Ruta"]
+        resumen["% Utilidad Bruta"] = (resumen["Utilidad Bruta"] / resumen["Ingreso Total"] * 100).round(2)
+        resumen["Costos Indirectos (35%)"] = (resumen["Ingreso Total"] * 0.35).round(2)
+        resumen["Utilidad Neta"] = resumen["Utilidad Bruta"] - resumen["Costos Indirectos (35%)"]
+        resumen["% Utilidad Neta"] = (resumen["Utilidad Neta"] / resumen["Ingreso Total"] * 100).round(2)
+
+        st.subheader("📋 Resumen de Viajes Concluidos")
+        st.dataframe(resumen, use_container_width=True)
+
+        csv = resumen.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "📥 Descargar Resumen en CSV",
+            data=csv,
+            file_name="resumen_traficos_concluidos.csv",
+            mime="text/csv"
+        )
