@@ -6,9 +6,10 @@ from datetime import datetime
 RUTA_RUTAS = "rutas_guardadas.csv"
 RUTA_PROG = "viajes_programados.csv"
 
-st.title("🗓️ Programación de Viajes")
+st.title("🛣️ Programación de Viajes Avanzada IMPO ➔ VACÍO ➔ EXPO")
 
-def safe(x): return 0 if pd.isna(x) or x is None else x
+def safe(x):
+    return 0 if pd.isna(x) or x is None else x
 
 def cargar_rutas():
     if not os.path.exists(RUTA_RUTAS):
@@ -29,56 +30,8 @@ def guardar_programacion(df_nueva):
     df_total.to_csv(RUTA_PROG, index=False)
 
 # =====================================
-# 1. REGISTRO DE TRÁFICO
+# COMPLETAR Y SIMULAR AVANZADO
 # =====================================
-st.header("🚛 Registro de Tráfico - Persona 1")
-
-rutas_df = cargar_rutas()
-tipo = st.selectbox("Tipo de ruta (ida)", ["IMPO", "EXPO"])
-rutas_tipo = rutas_df[rutas_df["Tipo"] == tipo].copy()
-
-if rutas_tipo.empty:
-    st.info("No hay rutas registradas de este tipo.")
-    st.stop()
-
-ruta_sel = st.selectbox("Selecciona una ruta (Origen → Destino)", rutas_tipo["Ruta"].unique())
-rutas_filtradas = rutas_tipo[rutas_tipo["Ruta"] == ruta_sel].copy()
-rutas_filtradas = rutas_filtradas.sort_values(by="% Utilidad", ascending=False)
-
-st.markdown("### Selecciona Cliente (ordenado por % utilidad)")
-cliente_idx = st.selectbox("Cliente", rutas_filtradas.index,
-    format_func=lambda x: f"{rutas_filtradas.loc[x, 'Cliente']} ({rutas_filtradas.loc[x, '% Utilidad']:.2f}%)")
-ruta_ida = rutas_filtradas.loc[cliente_idx]
-
-with st.form("registro_trafico"):
-    st.subheader("📝 Datos del tráfico")
-    fecha = st.date_input("Fecha de tráfico", value=datetime.today())
-    trafico = st.text_input("Número de Tráfico")
-    unidad = st.text_input("Unidad")
-    operador = st.text_input("Operador")
-    submit = st.form_submit_button("📅 Registrar Tráfico")
-
-    if submit:
-        if not trafico or not unidad or not operador:
-            st.error("❌ Todos los campos son obligatorios para registrar un tráfico.")
-        else:
-            fecha_str = fecha.strftime("%Y-%m-%d")
-            datos = ruta_ida.copy()
-            datos["Fecha"] = fecha_str
-            datos["Número_Trafico"] = trafico
-            datos["Unidad"] = unidad
-            datos["Operador"] = operador
-            datos["Tramo"] = "IDA"
-            datos["ID_Programacion"] = f"{trafico}_{fecha_str}"
-            guardar_programacion(pd.DataFrame([datos]))
-            st.success("✅ Tráfico registrado exitosamente.")
-
-# =====================================
-# 2. COMPLETAR Y SIMULAR TRÁFICO DETALLADO
-# =====================================
-st.markdown("---")
-st.title("🔁 Completar y Simular Tráfico Detallado")
-
 if not os.path.exists(RUTA_PROG) or not os.path.exists(RUTA_RUTAS):
     st.error("❌ Faltan archivos necesarios para continuar.")
     st.stop()
@@ -99,39 +52,63 @@ if not incompletos.empty:
     directas = df_rutas[(df_rutas["Tipo"] == tipo_regreso) & (df_rutas["Origen"] == destino_ida)].copy()
 
     if not directas.empty:
-        directas["Utilidad"] = directas["Ingreso Total"] - directas["Costo_Total_Ruta"]
-        directas["% Utilidad"] = (directas["Utilidad"] / directas["Ingreso Total"] * 100).round(2)
-        directas["Ruta"] = directas["Origen"] + " → " + directas["Destino"]
+        # Hay rutas directas
         directas = directas.sort_values(by="% Utilidad", ascending=False)
-
         idx = st.selectbox("Cliente sugerido (por utilidad)", directas.index,
             format_func=lambda x: f"{directas.loc[x, 'Cliente']} - {directas.loc[x, 'Ruta']} ({directas.loc[x, '% Utilidad']:.2f}%)")
         vuelta = directas.loc[idx]
+        rutas_seleccionadas = [ida, vuelta]
+    else:
+        # Buscar combinación VACÍO + EXPO
+        vacios = df_rutas[(df_rutas["Tipo"] == "VACIO") & (df_rutas["Origen"] == destino_ida)].copy()
+        mejor_combo = None
+        mejor_utilidad = -999999
 
-        ingreso = safe(ida["Ingreso Total"]) + safe(vuelta["Ingreso Total"])
-        costo = safe(ida["Costo_Total_Ruta"]) + safe(vuelta["Costo_Total_Ruta"])
-        utilidad = ingreso - costo
-        indirectos = ingreso * 0.35
-        utilidad_neta = utilidad - indirectos
+        for _, vacio in vacios.iterrows():
+            origen_expo = vacio["Destino"]
+            expo = df_rutas[(df_rutas["Tipo"] == tipo_regreso) & (df_rutas["Origen"] == origen_expo)]
+            if not expo.empty:
+                expo = expo.sort_values(by="% Utilidad", ascending=False).iloc[0]
+                ingreso_total = safe(ida["Ingreso Total"]) + safe(expo["Ingreso Total"])
+                costo_total = safe(ida["Costo_Total_Ruta"]) + safe(vacio["Costo_Total_Ruta"]) + safe(expo["Costo_Total_Ruta"])
+                utilidad = ingreso_total - costo_total
+                if utilidad > mejor_utilidad:
+                    mejor_utilidad = utilidad
+                    mejor_combo = (vacio, expo)
 
-        st.header("📊 Ingresos y Utilidades")
-        st.metric("Ingreso Total", f"${ingreso:,.2f}")
-        st.metric("Costo Total", f"${costo:,.2f}")
-        st.metric("Utilidad Bruta", f"${utilidad:,.2f} ({utilidad / ingreso * 100:.2f}%)")
-        st.metric("Costos Indirectos (35%)", f"${indirectos:,.2f}")
-        st.metric("Utilidad Neta", f"${utilidad_neta:,.2f} ({utilidad_neta / ingreso * 100:.2f}%)")
+        if mejor_combo:
+            vacio, expo = mejor_combo
+            rutas_seleccionadas = [ida, vacio, expo]
+        else:
+            st.warning("❌ No se encontraron combinaciones de regreso disponibles.")
+            st.stop()
 
-        if st.button("💾 Guardar y cerrar tráfico"):
-            datos = vuelta.copy()
+    # Mostrar resumen
+    st.header("📊 Ingresos y Utilidades")
+    ingreso = sum(safe(r["Ingreso Total"]) for r in rutas_seleccionadas)
+    costo = sum(safe(r["Costo_Total_Ruta"]) for r in rutas_seleccionadas)
+    utilidad = ingreso - costo
+    indirectos = ingreso * 0.35
+    utilidad_neta = utilidad - indirectos
+
+    st.metric("Ingreso Total", f"${ingreso:,.2f}")
+    st.metric("Costo Total", f"${costo:,.2f}")
+    st.metric("Utilidad Bruta", f"${utilidad:,.2f} ({(utilidad/ingreso*100):.2f}%)")
+    st.metric("Costos Indirectos (35%)", f"${indirectos:,.2f}")
+    st.metric("Utilidad Neta", f"${utilidad_neta:,.2f} ({(utilidad_neta/ingreso*100):.2f}%)")
+
+    if st.button("💾 Guardar y cerrar tráfico"):
+        nuevos_registros = []
+        for tramo in rutas_seleccionadas[1:]:  # Solo registrar vacio + expo
+            datos = tramo.copy()
             datos["Fecha"] = ida["Fecha"]
             datos["Número_Trafico"] = ida["Número_Trafico"]
             datos["Unidad"] = ida["Unidad"]
             datos["Operador"] = ida["Operador"]
-            datos["Tramo"] = "VUELTA"
             datos["ID_Programacion"] = ida["ID_Programacion"]
-            guardar_programacion(pd.DataFrame([datos]))
-            st.success("✅ Tráfico cerrado exitosamente.")
-    else:
-        st.warning("No se encontraron rutas de regreso desde ese destino.")
+            datos["Tramo"] = "VUELTA"
+            nuevos_registros.append(datos)
+        guardar_programacion(pd.DataFrame(nuevos_registros))
+        st.success("✅ Tráfico cerrado exitosamente.")
 else:
     st.info("No hay tráficos pendientes.")
