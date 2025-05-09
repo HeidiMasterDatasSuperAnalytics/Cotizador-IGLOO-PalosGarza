@@ -61,16 +61,19 @@ with st.form("registro_trafico"):
     submit = st.form_submit_button("📅 Registrar Tráfico")
 
     if submit:
-        fecha_str = fecha.strftime("%Y-%m-%d")
-        datos = ruta_ida.copy()
-        datos["Fecha"] = fecha_str
-        datos["Número_Trafico"] = trafico
-        datos["Unidad"] = unidad
-        datos["Operador"] = operador
-        datos["Tramo"] = "IDA"
-        datos["ID_Programacion"] = f"{trafico}_{fecha_str}"
-        guardar_programacion(pd.DataFrame([datos]))
-        st.success("✅ Tráfico registrado exitosamente.")
+        if not trafico or not unidad or not operador:
+            st.error("❌ Todos los campos son obligatorios para registrar un tráfico.")
+        else:
+            fecha_str = fecha.strftime("%Y-%m-%d")
+            datos = ruta_ida.copy()
+            datos["Fecha"] = fecha_str
+            datos["Número_Trafico"] = trafico
+            datos["Unidad"] = unidad
+            datos["Operador"] = operador
+            datos["Tramo"] = "IDA"
+            datos["ID_Programacion"] = f"{trafico}_{fecha_str}"
+            guardar_programacion(pd.DataFrame([datos]))
+            st.success("✅ Tráfico registrado exitosamente.")
 
 # =====================================
 # 5. GESTIÓN DE PROGRAMACIONES
@@ -81,32 +84,37 @@ st.subheader("🛠️ Gestión de Tráficos Programados")
 if os.path.exists(RUTA_PROG):
     df_prog = pd.read_csv(RUTA_PROG)
 
-    # Mostrar todos los ID únicos
-    ids = df_prog["ID_Programacion"].unique()
-    id_edit = st.selectbox("Selecciona un tráfico para editar o eliminar", ids)
+    if "ID_Programacion" not in df_prog.columns:
+        st.warning("⚠️ Algunos registros no tienen ID_Programacion y no se pueden mostrar aquí.")
+    else:
+        ids = df_prog["ID_Programacion"].dropna().unique()
+        if len(ids) == 0:
+            st.info("No hay programaciones válidas para editar o eliminar.")
+        else:
+            id_edit = st.selectbox("Selecciona un tráfico para editar o eliminar", ids)
 
-    df_filtrado = df_prog[df_prog["ID_Programacion"] == id_edit].reset_index()
-    st.write("**Vista previa del tráfico seleccionado:**")
-    st.dataframe(df_filtrado)
+            df_filtrado = df_prog[df_prog["ID_Programacion"] == id_edit].reset_index()
+            st.write("**Vista previa del tráfico seleccionado:**")
+            st.dataframe(df_filtrado)
 
-    # Botón de eliminar
-    if st.button("🗑️ Eliminar tráfico completo"):
-        df_prog = df_prog[df_prog["ID_Programacion"] != id_edit]
-        df_prog.to_csv(RUTA_PROG, index=False)
-        st.success("✅ Tráfico eliminado exitosamente.")
-        st.experimental_rerun()
+            # Botón de eliminar
+            if st.button("🗑️ Eliminar tráfico completo"):
+                df_prog = df_prog[df_prog["ID_Programacion"] != id_edit]
+                df_prog.to_csv(RUTA_PROG, index=False)
+                st.success("✅ Tráfico eliminado exitosamente.")
+                st.experimental_rerun()
 
-    # Opción de editar unidad y operador del tramo IDA
-    tramo_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"].iloc[0]
-    with st.form("editar_trafico"):
-        nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
-        nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
-        editar_btn = st.form_submit_button("💾 Guardar cambios")
+            # Opción de editar unidad y operador del tramo IDA
+            tramo_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"].iloc[0]
+            with st.form("editar_trafico"):
+                nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
+                nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
+                editar_btn = st.form_submit_button("💾 Guardar cambios")
 
-        if editar_btn:
-            df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
-            df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
-            df_prog.to_csv(RUTA_PROG, index=False)
-            st.success("✅ Cambios guardados exitosamente.")
+                if editar_btn:
+                    df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
+                    df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
+                    df_prog.to_csv(RUTA_PROG, index=False)
+                    st.success("✅ Cambios guardados exitosamente.")
 else:
     st.info("No hay programaciones registradas todavía.")
