@@ -82,64 +82,58 @@ if not os.path.exists(RUTA_PROG):
     st.stop()
 
 prog_df = pd.read_csv(RUTA_PROG)
-prog_incompleto = prog_df[prog_df["Estado"] == "INCOMPLETO"]
 
-if prog_incompleto.empty:
-    st.info("No hay tráficos pendientes de completar.")
+# Mostrar últimas programaciones (tramos únicos por tráfico)
+tramos_capturados = prog_df.groupby("ID_Programacion").size().reset_index(name="Tramos")
+tramos_incompletos = tramos_capturados[tramos_capturados["Tramos"] == 1]
+
+if tramos_incompletos.empty:
+    st.info("No hay programaciones pendientes de completar.")
     st.stop()
 
-id_sel = st.selectbox("Selecciona un tráfico pendiente", prog_incompleto["ID_Programacion"].unique())
-trafico_base = prog_incompleto[prog_incompleto["ID_Programacion"] == id_sel].iloc[0]
+id_sel = st.selectbox("Selecciona tráfico pendiente", tramos_incompletos["ID_Programacion"])
+ida = prog_df[prog_df["ID_Programacion"] == id_sel].iloc[0]
+destino_ida = ida["Destino"]
+tipo_ida = ida["Tipo"]
 
-tipo_ida = trafico_base["Tipo"]
-destino_ida = trafico_base["Destino"]
+st.markdown(f"**Destino final del tramo registrado:** `{destino_ida}`")
 
-st.markdown(f"**Destino final del tráfico de ida:** `{destino_ida}`")
-
-# Buscar rutas sugeridas de regreso
 rutas_df = cargar_rutas()
-if tipo_ida == "IMPO":
-    tipo_regreso = "EXPO"
-elif tipo_ida == "EXPO":
-    tipo_regreso = "IMPO"
-else:
-    tipo_regreso = None
 
-rutas_vuelta = rutas_df[(rutas_df["Tipo"] == tipo_regreso) & (rutas_df["Origen"] == destino_ida)].copy()
+# Determinar tipo de ruta de regreso
+tipo_regreso = "EXPO" if tipo_ida == "IMPO" else "IMPO"
+candidatas = rutas_df[(rutas_df["Tipo"] == tipo_regreso) & (rutas_df["Origen"] == destino_ida)].copy()
+candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
+candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
+candidatas = candidatas.sort_values(by="% Utilidad", ascending=False)
+
 vacias = rutas_df[(rutas_df["Tipo"] == "VACIO") & (rutas_df["Origen"] == destino_ida)].copy()
 
-if rutas_vuelta.empty and vacias.empty:
-    st.warning("⚠️ No se encontraron rutas de regreso desde ese destino.")
-    st.stop()
-
-st.markdown("### 🚛 Ruta de Regreso")
-if not rutas_vuelta.empty:
-    rutas_vuelta = rutas_vuelta.sort_values(by="% Utilidad", ascending=False)
-    idx_regreso = st.selectbox("Cliente sugerido (ordenado por % utilidad)", rutas_vuelta.index,
-        format_func=lambda x: f"{rutas_vuelta.loc[x, 'Cliente']} ({rutas_vuelta.loc[x, '% Utilidad']:.2f}%)")
-    ruta_vuelta = rutas_vuelta.loc[idx_regreso]
+st.markdown("### 🚛 Ruta de regreso sugerida")
+if not candidatas.empty:
+    idx = st.selectbox("Cliente (ordenado por % utilidad)", candidatas.index,
+        format_func=lambda x: f"{candidatas.loc[x, 'Cliente']} ({candidatas.loc[x, '% Utilidad']:.2f}%)")
+    ruta_regreso = candidatas.loc[idx]
 else:
-    st.info("No hay rutas directas. Selecciona una ruta VACÍA")
-    idx_vacio = st.selectbox("Ruta VACÍA disponible", vacias.index,
+    st.info("No hay ruta directa. Selecciona una ruta VACÍA")
+    if vacias.empty:
+        st.warning("No hay rutas vacías disponibles.")
+        st.stop()
+    idx = st.selectbox("Ruta VACÍA", vacias.index,
         format_func=lambda x: f"{vacias.loc[x, 'Origen']} → {vacias.loc[x, 'Destino']}")
-    ruta_vuelta = vacias.loc[idx_vacio]
+    ruta_regreso = vacias.loc[idx]
 
-if st.button("💾 Guardar regreso y completar tráfico"):
-    datos = ruta_vuelta.copy()
-    datos["Fecha"] = trafico_base["Fecha"]
-    datos["Número_Trafico"] = trafico_base["Número_Trafico"]
-    datos["Unidad"] = trafico_base["Unidad"]
-    datos["Operador"] = trafico_base["Operador"]
+if st.button("💾 Guardar ruta de regreso"):
+    datos = ruta_regreso.copy()
+    datos["Fecha"] = ida["Fecha"]
+    datos["Número_Trafico"] = ida["Número_Trafico"]
+    datos["Unidad"] = ida["Unidad"]
+    datos["Operador"] = ida["Operador"]
     datos["Tramo"] = "VUELTA"
-    datos["Estado"] = "COMPLETO"
-    datos["ID_Programacion"] = trafico_base["ID_Programacion"]
+    datos["ID_Programacion"] = ida["ID_Programacion"]
 
     guardar_programacion(pd.DataFrame([datos]))
-
-    # Actualizar estado de ida
-    prog_df.loc[prog_df["ID_Programacion"] == id_sel, "Estado"] = "COMPLETO"
-    prog_df.to_csv(RUTA_PROG, index=False)
-    st.success("✅ Vuelta registrada. Programación completada.")
+    st.success("✅ Vuelta registrada. Tráfico completado.")
 
 # =====================================
 # 3. SIMULACIÓN Y TABLA GENERAL
