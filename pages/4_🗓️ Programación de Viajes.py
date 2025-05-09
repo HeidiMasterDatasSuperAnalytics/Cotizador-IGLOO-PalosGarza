@@ -1,4 +1,4 @@
-# 5_🗓️ Programación de Viajes.py
+
 import streamlit as st
 import pandas as pd
 import os
@@ -9,8 +9,7 @@ RUTA_PROG = "viajes_programados.csv"
 
 st.title("🗓️ Programación de Viajes")
 
-def safe_number(x):
-    return 0 if pd.isna(x) or x is None else x
+def safe(x): return 0 if pd.isna(x) or x is None else x
 
 def cargar_rutas():
     if not os.path.exists(RUTA_RUTAS):
@@ -116,52 +115,12 @@ if os.path.exists(RUTA_PROG):
 st.markdown("---")
 st.title("🔁 Completar y Simular Tráfico Detallado")
 
-def safe(x): return 0 if pd.isna(x) or x is None else x
-
-def calcular_utilidad(ida, vuelta):
-    ingreso = safe(ida["Ingreso Total"]) + safe(vuelta["Ingreso Total"])
-    costo = safe(ida["Costo_Total_Ruta"]) + safe(vuelta["Costo_Total_Ruta"])
-    utilidad = ingreso - costo
-    indirectos = ingreso * 0.35
-    utilidad_neta = utilidad - indirectos
-    return ingreso, costo, utilidad, indirectos, utilidad_neta
-
-def cargar_resumen(ruta, titulo):
-    resumen = {
-        "KM": ruta.get("KM", "No aplica"),
-        "Diesel Camión": f"${safe(ruta.get("Costo Diesel Camion", 0)):,.2f}",
-        "Diesel Termo": f"${safe(ruta.get("Costo Diesel Termo", 0)):,.2f}",
-        "Sueldo": f"${safe(ruta.get("Sueldo Operador", 0)):,.2f}",
-        "Casetas": f"${safe(ruta.get("Casetas", 0)):,.2f}",
-        "Costo Cruce Convertido": f"${safe(ruta.get("Costo Cruce Convertido", 0)):,.2f}",
-        "Extras": {
-            "Lavado Termo": safe(ruta.get("Lavado Termo", 0)),
-            "Movimiento Local": safe(ruta.get("Movimiento Local", 0)),
-            "Puntualidad": safe(ruta.get("Puntualidad", 0)),
-            "Pensión": safe(ruta.get("Pension", 0)),
-            "Estancia": safe(ruta.get("Estancia", 0)),
-            "Fianza Termo": safe(ruta.get("Fianza Termo", 0)),
-            "Renta Termo": safe(ruta.get("Renta Termo", 0))
-        }
-    }
-    return resumen
-
-def mostrar_resumen(nombre, resumen):
-    st.markdown(f"#### {nombre}")
-    for k, v in resumen.items():
-        if k == "Extras":
-            st.markdown("**Extras detallados:**")
-            for extra, val in v.items():
-                st.markdown(f"- {extra}: ${val:,.2f}")
-        else:
-            st.markdown(f"- {k}: {v}")
-
 if not os.path.exists(RUTA_PROG) or not os.path.exists(RUTA_RUTAS):
     st.error("❌ Faltan archivos necesarios para continuar.")
     st.stop()
 
 df_prog = pd.read_csv(RUTA_PROG)
-df_rutas = pd.read_csv(RUTA_RUTAS)
+df_rutas = cargar_rutas()
 
 incompletos = df_prog.groupby("ID_Programacion").size().reset_index(name="count")
 incompletos = incompletos[incompletos["count"] == 1]["ID_Programacion"]
@@ -174,28 +133,38 @@ if not incompletos.empty:
 
     tipo_regreso = "EXPO" if tipo_ida == "IMPO" else "IMPO"
     directas = df_rutas[(df_rutas["Tipo"] == tipo_regreso) & (df_rutas["Origen"] == destino_ida)].copy()
-    directas["Ruta"] = directas["Origen"] + " → " + directas["Destino"]
-    directas = directas.sort_values(by="% Utilidad", ascending=False)
 
     if not directas.empty:
+        directas["Utilidad"] = directas["Ingreso Total"] - directas["Costo_Total_Ruta"]
+        directas["% Utilidad"] = (directas["Utilidad"] / directas["Ingreso Total"] * 100).round(2)
+        directas["Ruta"] = directas["Origen"] + " → " + directas["Destino"]
+        directas = directas.sort_values(by="% Utilidad", ascending=False)
+
         idx = st.selectbox("Cliente sugerido (por utilidad)", directas.index,
             format_func=lambda x: f"{directas.loc[x, 'Cliente']} - {directas.loc[x, 'Ruta']} ({directas.loc[x, '% Utilidad']:.2f}%)")
         vuelta = directas.loc[idx]
 
-        ingreso, costo, utilidad, indirectos, utilidad_neta = calcular_utilidad(ida, vuelta)
+        ingreso = safe(ida["Ingreso Total"]) + safe(vuelta["Ingreso Total"])
+        costo = safe(ida["Costo_Total_Ruta"]) + safe(vuelta["Costo_Total_Ruta"])
+        utilidad = ingreso - costo
+        indirectos = ingreso * 0.35
+        utilidad_neta = utilidad - indirectos
 
         st.header("📊 Ingresos y Utilidades")
-        st.markdown(f"- **Ingreso Total:** ${ingreso:,.2f}")
-        st.markdown(f"- **Costo Total:** ${costo:,.2f}")
-        st.markdown(f"- **Utilidad Bruta:** ${utilidad:,.2f}")
-        st.markdown(f"- **% Utilidad Bruta:** {utilidad / ingreso * 100:.2f}%")
-        st.markdown(f"- **Costos Indirectos (35%):** ${indirectos:,.2f}")
-        st.markdown(f"- **Utilidad Neta:** ${utilidad_neta:,.2f}")
-        st.markdown(f"- **% Utilidad Neta:** {utilidad_neta / ingreso * 100:.2f}%")
+        st.metric("Ingreso Total", f"${ingreso:,.2f}")
+        st.metric("Costo Total", f"${costo:,.2f}")
+        st.metric("Utilidad Neta", f"${utilidad_neta:,.2f}")
 
-        st.header("📋 Resumen de Rutas")
-        mostrar_resumen("IDA", cargar_resumen(ida, "IDA"))
-        mostrar_resumen("VUELTA", cargar_resumen(vuelta, "VUELTA"))
+        if st.button("💾 Guardar y cerrar tráfico"):
+            datos = vuelta.copy()
+            datos["Fecha"] = ida["Fecha"]
+            datos["Número_Trafico"] = ida["Número_Trafico"]
+            datos["Unidad"] = ida["Unidad"]
+            datos["Operador"] = ida["Operador"]
+            datos["Tramo"] = "VUELTA"
+            datos["ID_Programacion"] = ida["ID_Programacion"]
+            guardar_programacion(pd.DataFrame([datos]))
+            st.success("✅ Tráfico cerrado exitosamente.")
     else:
         st.warning("No se encontraron rutas de regreso desde ese destino.")
 else:
