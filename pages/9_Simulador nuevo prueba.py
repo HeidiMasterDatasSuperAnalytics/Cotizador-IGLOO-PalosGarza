@@ -106,7 +106,7 @@ if os.path.exists(RUTA_RUTAS):
         utilidad_bruta = ingreso_total - costo_total_general
         costos_indirectos = ingreso_total * 0.35
         utilidad_neta = utilidad_bruta - costos_indirectos
-        pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        color_porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
         pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
         st.markdown("---")
@@ -130,7 +130,7 @@ if os.path.exists(RUTA_RUTAS):
         st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
 
         color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
-        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{porcentaje_utilidad_bruta:.2f}%</span>", unsafe_allow_html=True)
+        st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{pct_bruta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown(f"<strong>Costos Indirectos (35%):</strong> <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
 
