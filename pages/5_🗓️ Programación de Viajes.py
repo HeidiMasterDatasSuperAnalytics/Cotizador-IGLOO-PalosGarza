@@ -30,7 +30,7 @@ def guardar_programacion(df_nueva):
     df_total.to_csv(RUTA_PROG, index=False)
 
 # =====================================
-# 1. CAPTURA NUEVO TRÁFICO (PERSONA 1)
+# 1. REGISTRO DE TRÁFICO (PERSONA 1)
 # =====================================
 st.header("🚛 Registro de Tráfico - Persona 1")
 
@@ -66,13 +66,12 @@ with st.form("registro_trafico"):
         datos["Unidad"] = unidad
         datos["Operador"] = operador
         datos["Tramo"] = "IDA"
-        datos["Estado"] = "INCOMPLETO"
         datos["ID_Programacion"] = f"{trafico}_{fecha}"
         guardar_programacion(pd.DataFrame([datos]))
         st.success("✅ Tráfico registrado exitosamente.")
 
 # =====================================
-# 2. COMPLETAR VUELTA (PERSONA 2)
+# 2. COMPLETAR TRÁFICO (PERSONA 2)
 # =====================================
 st.markdown("---")
 st.header("🔁 Completar Tráfico - Persona 2")
@@ -83,7 +82,7 @@ if not os.path.exists(RUTA_PROG):
 
 prog_df = pd.read_csv(RUTA_PROG)
 
-# Mostrar últimas programaciones (tramos únicos por tráfico)
+# Identificar ID de programaciones con solo un tramo
 tramos_capturados = prog_df.groupby("ID_Programacion").size().reset_index(name="Tramos")
 tramos_incompletos = tramos_capturados[tramos_capturados["Tramos"] == 1]
 
@@ -103,8 +102,6 @@ rutas_df = cargar_rutas()
 # Determinar tipo de ruta de regreso
 tipo_regreso = "EXPO" if tipo_ida == "IMPO" else "IMPO"
 candidatas = rutas_df[(rutas_df["Tipo"] == tipo_regreso) & (rutas_df["Origen"] == destino_ida)].copy()
-candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
-candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
 candidatas = candidatas.sort_values(by="% Utilidad", ascending=False)
 
 vacias = rutas_df[(rutas_df["Tipo"] == "VACIO") & (rutas_df["Origen"] == destino_ida)].copy()
@@ -136,31 +133,33 @@ if st.button("💾 Guardar ruta de regreso"):
     st.success("✅ Vuelta registrada. Tráfico completado.")
 
 # =====================================
-# 3. SIMULACIÓN Y TABLA GENERAL
+# 3. SIMULACIÓN FINAL DE TRÁFICOS COMPLETOS
 # =====================================
 st.markdown("---")
-st.subheader("📊 Simulación y Resultados Totales")
+st.subheader("📊 Simulación de Tráficos Completos")
 
 if os.path.exists(RUTA_PROG):
     df = pd.read_csv(RUTA_PROG)
     df["Utilidad"] = df["Ingreso Total"] - df["Costo_Total_Ruta"]
-    agrupado = df.groupby("ID_Programacion").agg({
-        "Ingreso Total": "sum",
-        "Costo_Total_Ruta": "sum",
-        "Utilidad": "sum"
-    }).reset_index()
-    agrupado["% Utilidad Bruta"] = (agrupado["Utilidad"] / agrupado["Ingreso Total"] * 100).round(2)
-    agrupado["Costos Indirectos"] = agrupado["Ingreso Total"] * 0.35
-    agrupado["Utilidad Neta"] = agrupado["Utilidad"] - agrupado["Costos Indirectos"]
-    agrupado["% Utilidad Neta"] = (agrupado["Utilidad Neta"] / agrupado["Ingreso Total"] * 100).round(2)
 
-    st.dataframe(agrupado, use_container_width=True)
+    completos = df.groupby("ID_Programacion").size().reset_index(name="Tramos")
+    ids_completos = completos[completos["Tramos"] == 2]["ID_Programacion"]
+    df_completos = df[df["ID_Programacion"].isin(ids_completos)].copy()
 
-    st.markdown("### 📄 Detalle completo de viajes")
-    mostrar = df[[
-        "Fecha", "Tramo", "Estado", "Número_Trafico", "Unidad", "Operador", "Tipo", "Cliente",
-        "Origen", "Destino", "Ingreso Total", "Costo_Total_Ruta", "Utilidad"
-    ]]
-    st.dataframe(mostrar, use_container_width=True)
+    if not df_completos.empty:
+        resumen = df_completos.groupby("ID_Programacion").agg({
+            "Ingreso Total": "sum",
+            "Costo_Total_Ruta": "sum",
+            "Utilidad": "sum"
+        }).reset_index()
+
+        resumen["% Utilidad Bruta"] = (resumen["Utilidad"] / resumen["Ingreso Total"] * 100).round(2)
+        resumen["Costos Indirectos"] = resumen["Ingreso Total"] * 0.35
+        resumen["Utilidad Neta"] = resumen["Utilidad"] - resumen["Costos Indirectos"]
+        resumen["% Utilidad Neta"] = (resumen["Utilidad Neta"] / resumen["Ingreso Total"] * 100).round(2)
+
+        st.dataframe(resumen, use_container_width=True)
+    else:
+        st.info("Aún no hay programaciones completas.")
 else:
     st.info("No hay viajes programados todavía.")
