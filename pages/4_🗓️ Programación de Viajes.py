@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -30,7 +29,7 @@ def guardar_programacion(df_nueva):
     df_total.to_csv(RUTA_PROG, index=False)
 
 # =====================================
-# 1. REGISTRO DE TRÁFICO (PERSONA 1)
+# 1. REGISTRO DE TRÁFICO
 # =====================================
 st.header("🚛 Registro de Tráfico - Persona 1")
 
@@ -75,42 +74,7 @@ with st.form("registro_trafico"):
             st.success("✅ Tráfico registrado exitosamente.")
 
 # =====================================
-# 2. VER, EDITAR, ELIMINAR
-# =====================================
-if os.path.exists(RUTA_PROG):
-    df_prog = pd.read_csv(RUTA_PROG)
-    st.markdown("---")
-    st.subheader("📋 Programaciones Registradas")
-
-    if "ID_Programacion" in df_prog.columns:
-        st.dataframe(df_prog, use_container_width=True)
-
-        ids = df_prog["ID_Programacion"].dropna().unique()
-        id_edit = st.selectbox("Selecciona un tráfico para editar o eliminar", ids)
-        df_filtrado = df_prog[df_prog["ID_Programacion"] == id_edit].reset_index()
-        st.write("**Vista previa del tráfico seleccionado:**")
-        st.dataframe(df_filtrado)
-
-        if st.button("🗑️ Eliminar tráfico completo"):
-            df_prog = df_prog[df_prog["ID_Programacion"] != id_edit]
-            df_prog.to_csv(RUTA_PROG, index=False)
-            st.success("✅ Tráfico eliminado exitosamente.")
-            st.experimental_rerun()
-
-        tramo_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"].iloc[0]
-        with st.form("editar_trafico"):
-            nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
-            nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
-            editar_btn = st.form_submit_button("💾 Guardar cambios")
-
-            if editar_btn:
-                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
-                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
-                df_prog.to_csv(RUTA_PROG, index=False)
-                st.success("✅ Cambios guardados exitosamente.")
-
-# =====================================
-# 3. COMPLETAR Y SIMULAR TRÁFICO
+# 2. COMPLETAR Y SIMULAR TRÁFICO DETALLADO
 # =====================================
 st.markdown("---")
 st.title("🔁 Completar y Simular Tráfico Detallado")
@@ -153,7 +117,9 @@ if not incompletos.empty:
         st.header("📊 Ingresos y Utilidades")
         st.metric("Ingreso Total", f"${ingreso:,.2f}")
         st.metric("Costo Total", f"${costo:,.2f}")
-        st.metric("Utilidad Neta", f"${utilidad_neta:,.2f}")
+        st.metric("Utilidad Bruta", f"${utilidad:,.2f} ({utilidad / ingreso * 100:.2f}%)")
+        st.metric("Costos Indirectos (35%)", f"${indirectos:,.2f}")
+        st.metric("Utilidad Neta", f"${utilidad_neta:,.2f} ({utilidad_neta / ingreso * 100:.2f}%)")
 
         if st.button("💾 Guardar y cerrar tráfico"):
             datos = vuelta.copy()
