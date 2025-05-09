@@ -129,7 +129,7 @@ if os.path.exists(RUTA_RUTAS):
         color_utilidad_bruta = "green" if utilidad_bruta >= 0 else "red"
         st.markdown(f"<strong>Utilidad Bruta:</strong> <span style='color:{color_utilidad_bruta}; font-weight:bold'>${utilidad_bruta:,.2f}</span>", unsafe_allow_html=True)
 
-        color_porcentaje_bruta = "green" if porcentaje_utilidad_bruta >= 50 else "red"
+        color_porcentaje_bruta = "green" if pct_bruta >= 50 else "red"
         st.markdown(f"<strong>% Utilidad Bruta:</strong> <span style='color:{color_porcentaje_bruta}; font-weight:bold'>{pct_bruta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown(f"<strong>Costos Indirectos (35%):</strong> <span style='font-weight:bold'>${costos_indirectos:,.2f}</span>", unsafe_allow_html=True)
@@ -137,8 +137,8 @@ if os.path.exists(RUTA_RUTAS):
         color_utilidad_neta = "green" if utilidad_neta >= 0 else "red"
         st.markdown(f"<strong>Utilidad Neta:</strong> <span style='color:{color_utilidad_neta}; font-weight:bold'>${utilidad_neta:,.2f}</span>", unsafe_allow_html=True)
 
-        color_porcentaje_neta = "green" if porcentaje_utilidad_neta >= 15 else "red"
-        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{porcentaje_utilidad_neta:.2f}%</span>", unsafe_allow_html=True)
+        color_porcentaje_neta = "green" if pct_neta >= 15 else "red"
+        st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{pct_neta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown("## 📋 Resumen de Rutas")
