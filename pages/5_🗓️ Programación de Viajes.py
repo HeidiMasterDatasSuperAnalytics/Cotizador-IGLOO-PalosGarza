@@ -11,9 +11,6 @@ st.title("🗓️ Programación de Viajes")
 def safe_number(x):
     return 0 if pd.isna(x) or x is None else x
 
-# =====================================
-# FUNCIONES AUXILIARES
-# =====================================
 def cargar_rutas():
     if not os.path.exists(RUTA_RUTAS):
         st.error("No se encontró rutas_guardadas.csv")
@@ -115,7 +112,6 @@ if rutas_vuelta.empty and vacias.empty:
     st.warning("⚠️ No se encontraron rutas de regreso desde ese destino.")
     st.stop()
 
-# Mostrar sugerencias
 st.markdown("### 🚛 Ruta de Regreso")
 if not rutas_vuelta.empty:
     rutas_vuelta = rutas_vuelta.sort_values(by="% Utilidad", ascending=False)
@@ -146,16 +142,31 @@ if st.button("💾 Guardar regreso y completar tráfico"):
     st.success("✅ Vuelta registrada. Programación completada.")
 
 # =====================================
-# 3. TABLA COMPLETA
+# 3. SIMULACIÓN Y TABLA GENERAL
 # =====================================
 st.markdown("---")
-st.subheader("📋 Programaciones Guardadas")
+st.subheader("📊 Simulación y Resultados Totales")
 
 if os.path.exists(RUTA_PROG):
     df = pd.read_csv(RUTA_PROG)
     df["Utilidad"] = df["Ingreso Total"] - df["Costo_Total_Ruta"]
+    agrupado = df.groupby("ID_Programacion").agg({
+        "Ingreso Total": "sum",
+        "Costo_Total_Ruta": "sum",
+        "Utilidad": "sum"
+    }).reset_index()
+    agrupado["% Utilidad Bruta"] = (agrupado["Utilidad"] / agrupado["Ingreso Total"] * 100).round(2)
+    agrupado["Costos Indirectos"] = agrupado["Ingreso Total"] * 0.35
+    agrupado["Utilidad Neta"] = agrupado["Utilidad"] - agrupado["Costos Indirectos"]
+    agrupado["% Utilidad Neta"] = (agrupado["Utilidad Neta"] / agrupado["Ingreso Total"] * 100).round(2)
+
+    st.dataframe(agrupado, use_container_width=True)
+
+    st.markdown("### 📄 Detalle completo de viajes")
     mostrar = df[[
         "Fecha", "Tramo", "Estado", "Número_Trafico", "Unidad", "Operador", "Tipo", "Cliente",
         "Origen", "Destino", "Ingreso Total", "Costo_Total_Ruta", "Utilidad"
     ]]
     st.dataframe(mostrar, use_container_width=True)
+else:
+    st.info("No hay viajes programados todavía.")
