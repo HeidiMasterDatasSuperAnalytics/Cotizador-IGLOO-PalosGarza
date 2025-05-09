@@ -160,3 +160,43 @@ if not incompletos.empty:
         st.success("✅ Tráfico cerrado exitosamente.")
 else:
     st.info("No hay tráficos pendientes.")
+
+st.title("✅ Tráficos Concluidos")
+
+if not os.path.exists(RUTA_PROG):
+    st.error("❌ No se encontró el archivo de viajes programados.")
+    st.stop()
+
+df = pd.read_csv(RUTA_PROG)
+
+# Verificamos que haya tráfico cerrado (IDA + VUELTA o más)
+programaciones = df.groupby("ID_Programacion").size().reset_index(name="Tramos")
+concluidos = programaciones[programaciones["Tramos"] >= 2]["ID_Programacion"]
+
+if concluidos.empty:
+    st.info("Aún no hay tráficos concluidos.")
+else:
+    df_concluidos = df[df["ID_Programacion"].isin(concluidos)].copy()
+
+    # Agrupar por ID de programación
+    resumen = df_concluidos.groupby(["ID_Programacion", "Número_Trafico", "Fecha"]).agg({
+        "Ingreso Total": "sum",
+        "Costo_Total_Ruta": "sum"
+    }).reset_index()
+
+    resumen["Utilidad Bruta"] = resumen["Ingreso Total"] - resumen["Costo_Total_Ruta"]
+    resumen["% Utilidad Bruta"] = (resumen["Utilidad Bruta"] / resumen["Ingreso Total"] * 100).round(2)
+    resumen["Costos Indirectos (35%)"] = (resumen["Ingreso Total"] * 0.35).round(2)
+    resumen["Utilidad Neta"] = resumen["Utilidad Bruta"] - resumen["Costos Indirectos (35%)"]
+    resumen["% Utilidad Neta"] = (resumen["Utilidad Neta"] / resumen["Ingreso Total"] * 100).round(2)
+
+    st.subheader("📋 Resumen de Viajes Concluidos")
+    st.dataframe(resumen, use_container_width=True)
+
+    csv = resumen.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "📥 Descargar Resumen en CSV",
+        data=csv,
+        file_name="resumen_traficos_concluidos.csv",
+        mime="text/csv"
+    )
