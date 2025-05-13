@@ -75,10 +75,9 @@ with st.form("captura_ruta"):
         ingreso_flete = st.number_input("Ingreso Flete", min_value=0.0)
         moneda_cruce = st.selectbox("Moneda Ingreso Cruce", ["MXN", "USD"])
         ingreso_cruce = st.number_input("Ingreso Cruce", min_value=0.0)
-        moneda_costo_cruce = st.selectbox("Moneda Costo Cruce", ["MXN", "USD"])
-        costo_cruce = st.number_input("Costo Cruce", min_value=0.0)
-
     with col2:
+        moneda_costo_cruce = st.selectbox("Moneda Costo Cruce", ["MXN", "USD"])
+        costo_cruce = st.number_input("Costo Cruce", min_value=0.0)        
         horas_termo = st.number_input("Horas Termo", min_value=0.0)
         lavado_termo = st.number_input("Lavado Termo", min_value=0.0)
         movimiento_local = st.number_input("Movimiento Local", min_value=0.0)
