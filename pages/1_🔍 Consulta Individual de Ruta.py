@@ -12,25 +12,29 @@ def safe_number(x):
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
 
-    st.subheader("📌 Filtro de Ruta por Origen y Destino")
-    origenes = sorted(df["Origen"].dropna().unique())
-    destinos = sorted(df["Destino"].dropna().unique())
+    st.subheader("📌 Selecciona Tipo de Ruta")
+    tipo_sel = st.selectbox("Tipo", ["IMPO", "EXPO", "VACIO"])
 
-    origen_sel = st.selectbox("Selecciona Origen", origenes)
-    destino_sel = st.selectbox("Selecciona Destino", destinos)
+    df_tipo = df[df["Tipo"] == tipo_sel]
+    rutas_unicas = df_tipo[["Origen", "Destino"]].drop_duplicates()
+    opciones_ruta = list(rutas_unicas.itertuples(index=False, name=None))
 
-    rutas_filtradas = df[(df["Origen"] == origen_sel) & (df["Destino"] == destino_sel)]
+    st.subheader("📌 Selecciona Ruta (Origen → Destino)")
+    ruta_sel = st.selectbox("Ruta", opciones_ruta, format_func=lambda x: f"{x[0]} → {x[1]}")
+    origen_sel, destino_sel = ruta_sel
 
-    if rutas_filtradas.empty:
-        st.warning("⚠️ No hay rutas con ese origen y destino.")
+    df_filtrada = df_tipo[(df_tipo["Origen"] == origen_sel) & (df_tipo["Destino"] == destino_sel)]
+
+    if df_filtrada.empty:
+        st.warning("⚠️ No hay rutas con esa combinación.")
         st.stop()
 
     st.subheader("📌 Selecciona Cliente")
-    opciones = rutas_filtradas.index.tolist()
+    opciones = df_filtrada.index.tolist()
     index_sel = st.selectbox(
-        "Selecciona índice",
+        "Cliente",
         opciones,
-        format_func=lambda x: f"{df.loc[x, 'Tipo']} - {df.loc[x, 'Cliente']} ({df.loc[x, 'Origen']} → {df.loc[x, 'Destino']})"
+        format_func=lambda x: f"{df.loc[x, 'Cliente']} ({df.loc[x, 'Origen']} → {df.loc[x, 'Destino']})"
     )
 
     ruta = df.loc[index_sel]
