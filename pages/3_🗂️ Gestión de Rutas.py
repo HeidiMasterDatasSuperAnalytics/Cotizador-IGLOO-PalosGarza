@@ -120,7 +120,7 @@ if os.path.exists(RUTA_RUTAS):
 
                 costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce_convertido
 
-                df.at[indice_editar, "Modo"] = modo
+                df.at[indice_editar, "Modo viaje"] = modo
                 df.at[indice_editar, "Fecha"] = fecha
                 df.at[indice_editar, "Tipo"] = tipo
                 df.at[indice_editar, "Cliente"] = cliente
