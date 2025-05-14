@@ -84,20 +84,20 @@ elif tipo_principal == "VACIO":
         impo_rutas[impo_rutas["Origen"] == origen_siguiente],
         expo_rutas[expo_rutas["Origen"] == origen_siguiente]
     ])
-    if not candidatos.empty:
-        ruta_2 = elegir_ruta(candidatos, "Selecciona ruta IMPO o EXPO")
-        rutas_seleccionadas.append(ruta_2)
+if not candidatos.empty:
+    ruta_2 = elegir_ruta(candidatos, "Selecciona ruta IMPO o EXPO")
+    rutas_seleccionadas.append(ruta_2)
 
 # 🔁 Simulación y visualización
 st.markdown("---")
 if rutas_seleccionadas and st.button("🚛 Simular Vuelta Redonda"):
-ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
-costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
-utilidad_bruta = ingreso_total - costo_total_general
-costos_indirectos = ingreso_total * 0.35
-utilidad_neta = utilidad_bruta - costos_indirectos
-pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+    ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
+    costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
+    utilidad_bruta = ingreso_total - costo_total_general
+    costos_indirectos = ingreso_total * 0.35
+    utilidad_neta = utilidad_bruta - costos_indirectos
+    pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+    pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
     st.markdown("---")
     st.markdown("## 📄 Detalle de Rutas")
