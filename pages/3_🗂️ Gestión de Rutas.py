@@ -49,7 +49,7 @@ if os.path.exists(RUTA_RUTAS):
                 cliente = st.text_input("Cliente", value=ruta.get("Cliente", ""))
                 origen = st.text_input("Origen", value=ruta.get("Origen", ""))
                 destino = st.text_input("Destino", value=ruta.get("Destino", ""))
-                modo = st.selectbox("Modo de Viaje", ["Operado", "Team"], index=["Operado", "Team"].index(ruta.get("Modo", "Operado")))
+                Modo de Viaje = st.selectbox("Modo de Viaje", ["Operado", "Team"], index=["Operado", "Team"].index(ruta.get("Modo de Viaje", "Operado")))
                 km = st.number_input("Kilómetros", min_value=0.0, value=float(ruta.get("KM", 0.0)))
                 moneda_ingreso = st.selectbox("Moneda Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda", "MXN")))
                 ingreso_original = st.number_input("Ingreso Flete Original", min_value=0.0, value=float(ruta.get("Ingreso_Original", 0.0)))
@@ -120,7 +120,7 @@ if os.path.exists(RUTA_RUTAS):
 
                 costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + casetas + extras + costo_cruce_convertido
 
-                df.at[indice_editar, "Modo de Viaje"] = modo
+                df.at[indice_editar, "Modo de Viaje"] = Modo_de_Viaje
                 df.at[indice_editar, "Fecha"] = fecha
                 df.at[indice_editar, "Tipo"] = tipo
                 df.at[indice_editar, "Cliente"] = cliente
