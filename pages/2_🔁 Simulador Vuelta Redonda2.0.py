@@ -84,9 +84,10 @@ elif tipo_principal == "VACIO":
         impo_rutas[impo_rutas["Origen"] == origen_siguiente],
         expo_rutas[expo_rutas["Origen"] == origen_siguiente]
     ])
-if not candidatos.empty:
-    ruta_2 = elegir_ruta(candidatos, "Selecciona ruta IMPO o EXPO")
-    rutas_seleccionadas.append(ruta_2)
+
+    if not candidatos.empty:
+        ruta_2 = elegir_ruta(candidatos, "Selecciona ruta IMPO o EXPO")
+        rutas_seleccionadas.append(ruta_2)
 
 # 🔁 Simulación y visualización
 st.markdown("---")
