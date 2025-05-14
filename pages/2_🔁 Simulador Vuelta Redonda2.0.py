@@ -89,6 +89,7 @@ elif tipo_principal == "VACIO":
         rutas_seleccionadas.append(ruta_2)
 
     # 🔁 Simulación y visualización
+    st.markdown("---")
     if st.button("🚛 Simular Vuelta Redonda"):
         ingreso_total = sum(safe_number(r.get("Ingreso Total", 0)) for r in rutas_seleccionadas)
         costo_total_general = sum(safe_number(r.get("Costo_Total_Ruta", 0)) for r in rutas_seleccionadas)
