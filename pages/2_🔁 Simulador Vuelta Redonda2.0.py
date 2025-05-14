@@ -99,16 +99,16 @@ elif tipo_principal == "VACIO":
         pct_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
         pct_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-st.markdown("---")
-st.markdown("## 📄 Detalle de Rutas")
-for r in rutas_seleccionadas:
-    st.markdown(f"**{r['Tipo']} — {r.get('Cliente', 'nan')}**")
-    st.markdown(f"- {r['Origen']} → {r['Destino']}")
-    st.markdown(f"- Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}")
-    st.markdown(f"- Moneda: {r.get('Moneda', 'N/A')}")
-    st.markdown(f"- Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}")
-    st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
-    st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
+    st.markdown("---")
+    st.markdown("## 📄 Detalle de Rutas")
+    for r in rutas_seleccionadas:
+        st.markdown(f"**{r['Tipo']} — {r.get('Cliente', 'nan')}**")
+        st.markdown(f"- {r['Origen']} → {r['Destino']}")
+        st.markdown(f"- Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}")
+        st.markdown(f"- Moneda: {r.get('Moneda', 'N/A')}")
+        st.markdown(f"- Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}")
+        st.markdown(f"- Ingreso Total: ${safe_number(r.get('Ingreso Total')):,.2f}")
+        st.markdown(f"- Costo Total Ruta: ${safe_number(r.get('Costo_Total_Ruta')):,.2f}")
 
         st.markdown("---")
         st.subheader("📊 Resultado General")
