@@ -126,7 +126,8 @@ if os.path.exists(RUTA_RUTAS):
         st.markdown(f"<strong>% Utilidad Neta:</strong> <span style='color:{color_porcentaje_neta}; font-weight:bold'>{pct_neta:.2f}%</span>", unsafe_allow_html=True)
 
         st.markdown("---")
-        st.markdown("## 📋 Resumen de Rutas")
+        st.subheader("📋 Resumen de Rutas")
+
         tipos = ["IMPO", "VACIO", "EXPO"]
         cols = st.columns(3)
 
@@ -139,8 +140,8 @@ if os.path.exists(RUTA_RUTAS):
                 f"Casetas: ${safe_number(r.get('Casetas')):,.2f}",
                 f"Costo Cruce Convertido: ${safe_number(r.get('Costo Cruce Convertido')):,.2f}",
                 f"Ingreso Original: ${safe_number(r.get('Ingreso_Original')):,.2f}",
-                f"Moneda: {r.get('Moneda_Ingreso', 'N/A')}",
-                f"Tipo de cambio: {safe_number(r.get('Tipo_Cambio_Ingreso')):,.2f}",
+                f"Moneda: {r.get('Moneda', 'N/A')}",
+                f"Tipo de cambio: {safe_number(r.get('Tipo de cambio')):,.2f}",
                 "**Extras detallados:**",
                 f"Lavado Termo: ${safe_number(r.get('Lavado_Termo')):,.2f}",
                 f"Movimiento Local: ${safe_number(r.get('Movimiento_Local')):,.2f}",
@@ -148,7 +149,13 @@ if os.path.exists(RUTA_RUTAS):
                 f"Pensión: ${safe_number(r.get('Pension')):,.2f}",
                 f"Estancia: ${safe_number(r.get('Estancia')):,.2f}",
                 f"Fianza Termo: ${safe_number(r.get('Fianza_Termo')):,.2f}",
-                f"Renta Termo: ${safe_number(r.get('Renta_Termo')):,.2f}"
+                f"Renta Termo: ${safe_number(r.get('Renta_Termo')):,.2f}",
+                f"Pistas Extra: ${safe_number(r.get('Pistas_Extra')):,.2f}",
+                f"Stop: ${safe_number(r.get('Stop')):,.2f}",
+                f"Falso: ${safe_number(r.get('Falso')):,.2f}",
+                f"Gatas: ${safe_number(r.get('Gatas')):,.2f}",
+                f"Accesorios: ${safe_number(r.get('Accesorios')):,.2f}",
+                f"Guías: ${safe_number(r.get('Guias')):,.2f}"
             ]
 
         for i, tipo in enumerate(tipos):
