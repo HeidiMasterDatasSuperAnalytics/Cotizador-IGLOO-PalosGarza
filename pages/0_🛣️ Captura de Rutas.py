@@ -69,7 +69,7 @@ with st.form("captura_ruta"):
         cliente = st.text_input("Nombre Cliente")
         origen = st.text_input("Origen")
         destino = st.text_input("Destino")
-        modo_viaje = st.selectbox("Modo de Viaje", ["Operado", "Team"])
+        modo_viaje = st.selectbox("Modo de Viaje", ["Operador", "Team"])
         km = st.number_input("Kilómetros", min_value=0.0)
         moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
         ingreso_flete = st.number_input("Ingreso Flete", min_value=0.0)
