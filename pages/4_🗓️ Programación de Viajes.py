@@ -97,17 +97,22 @@ if os.path.exists(RUTA_PROG):
             st.success("✅ Tráfico eliminado exitosamente.")
             st.experimental_rerun()
 
-        tramo_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"].iloc[0]
-        with st.form("editar_trafico"):
-            nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
-            nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
-            editar_btn = st.form_submit_button("💾 Guardar cambios")
+        df_ida = df_filtrado[df_filtrado["Tramo"] == "IDA"]
 
-            if editar_btn:
-                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
-                df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
-                df_prog.to_csv(RUTA_PROG, index=False)
-                st.success("✅ Cambios guardados exitosamente.")
+        if not df_ida.empty:
+            tramo_ida = df_ida.iloc[0]
+            with st.form("editar_trafico"):
+                nueva_unidad = st.text_input("Editar Unidad", value=tramo_ida["Unidad"])
+                nuevo_operador = st.text_input("Editar Operador", value=tramo_ida["Operador"])
+                editar_btn = st.form_submit_button("💾 Guardar cambios")
+
+                if editar_btn:
+                    df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Unidad"] = nueva_unidad
+                    df_prog.loc[(df_prog["ID_Programacion"] == id_edit) & (df_prog["Tramo"] == "IDA"), "Operador"] = nuevo_operador
+                    df_prog.to_csv(RUTA_PROG, index=False)
+                    st.success("✅ Cambios guardados exitosamente.")
+        else:
+            st.warning("⚠️ No se encontró tramo IDA en este tráfico. No es posible editar Unidad u Operador.")
 
 
 # =====================================
