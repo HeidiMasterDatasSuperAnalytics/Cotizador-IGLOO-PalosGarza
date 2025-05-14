@@ -16,72 +16,77 @@ if os.path.exists(RUTA_RUTAS):
     expo_rutas = df[df["Tipo"] == "EXPO"].copy()
     vacio_rutas = df[df["Tipo"] == "VACIO"].copy()
 
-    st.subheader("📌 Paso 1: Selecciona tipo de ruta principal")
-    tipo_principal = st.selectbox("Tipo principal", ["IMPO", "EXPO"])
+st.subheader("📌 Paso 1: Selecciona tipo de ruta principal")
+tipo_principal = st.selectbox("Tipo principal", ["IMPO", "EXPO", "VACIO"])
 
-    ruta_principal = None
-    rutas_seleccionadas = []
-    ruta_1 = ruta_2 = ruta_3 = None
+ruta_1 = ruta_2 = ruta_3 = None
+rutas_seleccionadas = []
 
-    def elegir_ruta(df_tipo, label):
-        rutas_unicas = df_tipo[["Origen", "Destino"]].drop_duplicates()
-        opciones_ruta = list(rutas_unicas.itertuples(index=False, name=None))
-        ruta_sel = st.selectbox(label, opciones_ruta, format_func=lambda x: f"{x[0]} → {x[1]}")
-        origen, destino = ruta_sel
-        candidatas = df_tipo[(df_tipo["Origen"] == origen) & (df_tipo["Destino"] == destino)].copy()
-        candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
-        candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
-        candidatas = candidatas.sort_values(by="% Utilidad", ascending=False).reset_index()
-        idx = st.selectbox("Cliente (ordenado por % utilidad)", candidatas.index,
-                          format_func=lambda i: f"{candidatas.loc[i, 'Cliente']} ({candidatas.loc[i, '% Utilidad']:.2f}%)")
-        return candidatas.loc[idx]
+def elegir_ruta(df_tipo, label):
+    rutas_unicas = df_tipo[["Origen", "Destino"]].drop_duplicates()
+    opciones_ruta = list(rutas_unicas.itertuples(index=False, name=None))
+    ruta_sel = st.selectbox(label, opciones_ruta, format_func=lambda x: f"{x[0]} → {x[1]}")
+    origen, destino = ruta_sel
+    candidatas = df_tipo[(df_tipo["Origen"] == origen) & (df_tipo["Destino"] == destino)].copy()
+    candidatas["Utilidad"] = candidatas["Ingreso Total"] - candidatas["Costo_Total_Ruta"]
+    candidatas["% Utilidad"] = (candidatas["Utilidad"] / candidatas["Ingreso Total"] * 100).round(2)
+    candidatas = candidatas.sort_values(by="% Utilidad", ascending=False).reset_index()
+    idx = st.selectbox("Cliente (ordenado por % utilidad)", candidatas.index,
+                      format_func=lambda i: f"{candidatas.loc[i, 'Cliente']} ({candidatas.loc[i, '% Utilidad']:.2f}%)")
+    return candidatas.loc[idx]
 
-        destino_ref = ruta_principal["Destino"]
-        vacios = vacio_rutas[vacio_rutas["Origen"] == destino_ref].copy()
-        st.markdown("---")
-        st.subheader("📌 Paso 2: Ruta VACÍA sugerida (opcional)")
-        if not vacios.empty:
-            vacio_idx = st.selectbox("Ruta VACÍA (Origen = " + destino_ref + ")", vacios.index,
-                                     format_func=lambda x: f"{vacios.loc[x, 'Origen']} → {vacios.loc[x, 'Destino']}")
-            ruta_vacio = vacios.loc[vacio_idx]
+if tipo_principal == "IMPO":
+    ruta_1 = elegir_ruta(impo_rutas, "Selecciona ruta IMPO")
+    rutas_seleccionadas.append(ruta_1)
 
-    if tipo_principal == "IMPO":
-        ruta_1 = elegir_ruta(impo_rutas, "Selecciona ruta IMPO")
-        rutas_seleccionadas.append(ruta_1)
+    st.markdown("---")
+    st.subheader("📌 Paso 2: Ruta VACÍA (opcional)")
+    vacios = vacio_rutas[vacio_rutas["Origen"] == ruta_1["Destino"]]
+    if not vacios.empty:
+        ruta_2 = elegir_ruta(vacios, "Selecciona ruta VACÍA")
+        rutas_seleccionadas.append(ruta_2)
 
-        st.markdown("---")
-        st.subheader("📌 Paso 2: Ruta VACÍA (opcional)")
-        vacios = vacio_rutas[vacio_rutas["Origen"] == ruta_1["Destino"]]
-        if not vacios.empty:
-            ruta_2 = elegir_ruta(vacios, "Selecciona ruta VACÍA")
-            rutas_seleccionadas.append(ruta_2)
+    st.markdown("---")
+    st.subheader("📌 Paso 3: Ruta EXPO (opcional)")
+    origen_expo = ruta_2["Destino"] if ruta_2 is not None else ruta_1["Destino"]
+    candidatos = expo_rutas[expo_rutas["Origen"] == origen_expo]
+    if not candidatos.empty:
+        ruta_3 = elegir_ruta(candidatos, "Selecciona ruta EXPO")
+        rutas_seleccionadas.append(ruta_3)
 
-        st.markdown("---")
-        st.subheader("📌 Paso 3: Ruta EXPO (opcional)")
-        origen_expo = ruta_2["Destino"] if ruta_2 is not None else ruta_1["Destino"]
-        candidatos = expo_rutas[expo_rutas["Origen"] == origen_expo]
-        if not candidatos.empty:
-            ruta_3 = elegir_ruta(candidatos, "Selecciona ruta EXPO")
-            rutas_seleccionadas.append(ruta_3)
+elif tipo_principal == "EXPO":
+    ruta_1 = elegir_ruta(expo_rutas, "Selecciona ruta EXPO")
+    rutas_seleccionadas.append(ruta_1)
 
-    else:  # EXPO
-        ruta_1 = elegir_ruta(expo_rutas, "Selecciona ruta EXPO")
-        rutas_seleccionadas.append(ruta_1)
+    st.markdown("---")
+    st.subheader("📌 Paso 2: Ruta VACÍA (opcional)")
+    vacios = vacio_rutas[vacio_rutas["Origen"] == ruta_1["Destino"]]
+    if not vacios.empty:
+        ruta_2 = elegir_ruta(vacios, "Selecciona ruta VACÍA")
+        rutas_seleccionadas.append(ruta_2)
 
-        st.markdown("---")
-        st.subheader("📌 Paso 2: Ruta VACÍA (opcional)")
-        vacios = vacio_rutas[vacio_rutas["Origen"] == ruta_1["Destino"]]
-        if not vacios.empty:
-            ruta_2 = elegir_ruta(vacios, "Selecciona ruta VACÍA")
-            rutas_seleccionadas.append(ruta_2)
+    st.markdown("---")
+    st.subheader("📌 Paso 3: Ruta IMPO (opcional)")
+    origen_impo = ruta_2["Destino"] if ruta_2 is not None else ruta_1["Destino"]
+    candidatos = impo_rutas[impo_rutas["Origen"] == origen_impo]
+    if not candidatos.empty:
+        ruta_3 = elegir_ruta(candidatos, "Selecciona ruta IMPO")
+        rutas_seleccionadas.append(ruta_3)
 
-        st.markdown("---")
-        st.subheader("📌 Paso 3: Ruta IMPO (opcional)")
-        origen_impo = ruta_2["Destino"] if ruta_2 is not None else ruta_1["Destino"]
-        candidatos = impo_rutas[impo_rutas["Origen"] == origen_impo]
-        if not candidatos.empty:
-            ruta_3 = elegir_ruta(candidatos, "Selecciona ruta IMPO")
-            rutas_seleccionadas.append(ruta_3)
+elif tipo_principal == "VACIO":
+    ruta_1 = elegir_ruta(vacio_rutas, "Selecciona ruta VACÍA")
+    rutas_seleccionadas.append(ruta_1)
+
+    st.markdown("---")
+    st.subheader("📌 Paso 2: Ruta siguiente sugerida (IMPO o EXPO)")
+    origen_siguiente = ruta_1["Destino"]
+    candidatos = pd.concat([
+        impo_rutas[impo_rutas["Origen"] == origen_siguiente],
+        expo_rutas[expo_rutas["Origen"] == origen_siguiente]
+    ])
+    if not candidatos.empty:
+        ruta_2 = elegir_ruta(candidatos, "Selecciona ruta IMPO o EXPO")
+        rutas_seleccionadas.append(ruta_2)
 
     # 🔁 Simulación y visualización
     if st.button("🚛 Simular Vuelta Redonda"):
