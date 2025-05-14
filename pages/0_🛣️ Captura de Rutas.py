@@ -130,7 +130,7 @@ if st.session_state.revisar_ruta and st.button("💾 Guardar Ruta"):
     costo_diesel_camion = (d["km"] / valores["Rendimiento Camion"]) * valores["Costo Diesel"]
     costo_diesel_termo = d["horas_termo"] * valores["Rendimiento Termo"] * valores["Costo Diesel"]
 
-    factor = 2 if d["modo"] == "Team" else 1
+    factor = 2 if d["Modo de Viaje"] == "Team" else 1
 
     if d["tipo"] == "IMPO":
         pago_km = valores["Pago x km IMPO"]
