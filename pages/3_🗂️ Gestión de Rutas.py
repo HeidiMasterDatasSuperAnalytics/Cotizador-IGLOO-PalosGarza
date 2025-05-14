@@ -49,7 +49,7 @@ if os.path.exists(RUTA_RUTAS):
                 cliente = st.text_input("Cliente", value=ruta.get("Cliente", ""))
                 origen = st.text_input("Origen", value=ruta.get("Origen", ""))
                 destino = st.text_input("Destino", value=ruta.get("Destino", ""))
-                Modo_de_Viaje = st.selectbox("Modo de Viaje", ["Operado", "Team"], index=["Operado", "Team"].index(ruta.get("Modo de Viaje", "Operado")))
+                Modo_de_Viaje = st.selectbox("Modo de Viaje", ["Operador", "Team"], index=["Operador", "Team"].index(ruta.get("Modo de Viaje", "Operador")))
                 km = st.number_input("Kilómetros", min_value=0.0, value=float(ruta.get("KM", 0.0)))
                 moneda_ingreso = st.selectbox("Moneda Flete", ["MXN", "USD"], index=["MXN", "USD"].index(ruta.get("Moneda", "MXN")))
                 ingreso_original = st.number_input("Ingreso Flete Original", min_value=0.0, value=float(ruta.get("Ingreso_Original", 0.0)))
