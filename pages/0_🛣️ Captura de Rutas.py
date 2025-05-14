@@ -69,7 +69,7 @@ with st.form("captura_ruta"):
         cliente = st.text_input("Nombre Cliente")
         origen = st.text_input("Origen")
         destino = st.text_input("Destino")
-        modo_viaje = st.selectbox("Modo de Viaje", ["Operador", "Team"])
+        Modo_de_Viaje = st.selectbox("Modo de Viaje", ["Operador", "Team"])
         km = st.number_input("Kilómetros", min_value=0.0)
         moneda_ingreso = st.selectbox("Moneda Ingreso Flete", ["MXN", "USD"])
         ingreso_flete = st.number_input("Ingreso Flete", min_value=0.0)
@@ -104,7 +104,7 @@ with st.form("captura_ruta"):
     if revisar:
         st.session_state.revisar_ruta = True
         st.session_state.datos_captura = {
-            "fecha": fecha, "tipo": tipo, "cliente": cliente, "origen": origen, "destino": destino, "modo": modo_viaje,
+            "fecha": fecha, "tipo": tipo, "cliente": cliente, "origen": origen, "destino": destino, "Modo de Viaje": Modo_de_Viaje,
             "km": km, "moneda_ingreso": moneda_ingreso, "ingreso_flete": ingreso_flete,
             "moneda_cruce": moneda_cruce, "ingreso_cruce": ingreso_cruce,
             "moneda_costo_cruce": moneda_costo_cruce, "costo_cruce": costo_cruce,
@@ -157,7 +157,7 @@ if st.session_state.revisar_ruta and st.button("💾 Guardar Ruta"):
     costo_total = costo_diesel_camion + costo_diesel_termo + sueldo + bono + d["casetas"] + extras + costo_cruce_convertido
 
     nueva_ruta = {
-        "Fecha": d["fecha"], "Tipo": d["tipo"], "Cliente": d["cliente"], "Origen": d["origen"], "Destino": d["destino"], "modo": d["modo"], "KM": d["km"],
+        "Fecha": d["fecha"], "Tipo": d["tipo"], "Cliente": d["cliente"], "Origen": d["origen"], "Destino": d["destino"], "Modo de Viaje": d["Modo de Viaje"], "KM": d["km"],
         "Moneda": d["moneda_ingreso"], "Ingreso_Original": d["ingreso_flete"], "Tipo de cambio": tipo_cambio_flete,
         "Ingreso Flete": ingreso_flete_convertido, "Moneda_Cruce": d["moneda_cruce"], "Cruce_Original": d["ingreso_cruce"],
         "Tipo cambio Cruce": tipo_cambio_cruce, "Ingreso Cruce": ingreso_cruce_convertido,
