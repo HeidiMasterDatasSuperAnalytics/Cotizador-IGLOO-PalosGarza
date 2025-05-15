@@ -100,7 +100,7 @@ if os.path.exists(RUTA_RUTAS):
                 costo_diesel_camion = (km / rendimiento_camion) * costo_diesel
                 costo_diesel_termo = horas_termo * rendimiento_termo * costo_diesel
 
-                factor = 2 if modo == "Team" else 1
+                factor = 2 if Modo_de_Viaje == "Team" else 1
 
                 if tipo == "IMPO":
                     pago_km = valores.get("Pago x km IMPO", 2.1)
