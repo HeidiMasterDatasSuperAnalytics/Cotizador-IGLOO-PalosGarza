@@ -2,13 +2,42 @@ import streamlit as st
 import pandas as pd
 import os
 
+# Ruta y valores por defecto
+RUTA_DATOS = "datos_generales.csv"
 RUTA_RUTAS = "rutas_guardadas.csv"
+valores_por_defecto = {
+    "Rendimiento Camion": 2.5,
+    "Costo Diesel": 24.0,
+}
+
+# Cargar valores desde CSV o usar los por defecto
+if os.path.exists(RUTA_DATOS):
+    df_datos = pd.read_csv(RUTA_DATOS).set_index("Parametro")["Valor"].to_dict()
+    valores = {**valores_por_defecto, **df_datos}
+else:
+    valores = valores_por_defecto.copy()
 
 st.title("🔍 Consulta Individual de Ruta")
 
 def safe_number(x):
     return 0 if pd.isna(x) else x
 
+def mostrar_resultados(ingreso_total, costo_total, utilidad_bruta, costos_indirectos, utilidad_neta, porcentaje_bruta, porcentaje_neta):
+    st.markdown("---")
+    st.subheader("📊 Ingresos y Utilidades")
+
+    def colored_bold(label, value, condition):
+        color = "green" if condition else "red"
+        return f"<strong>{label}:</strong> <span style='color:{color}; font-weight:bold'>{value}</span>"
+
+    st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
+    st.write(f"**Costo Total:** ${costo_total:,.2f}")
+    st.markdown(colored_bold("Utilidad Bruta", f"${utilidad_bruta:,.2f}", utilidad_bruta >= 0), unsafe_allow_html=True)
+    st.markdown(colored_bold("% Utilidad Bruta", f"{porcentaje_bruta:.2f}%", porcentaje_bruta >= 50), unsafe_allow_html=True)
+    st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
+    st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
+    st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
+    
 if os.path.exists(RUTA_RUTAS):
     df = pd.read_csv(RUTA_RUTAS)
 
@@ -38,79 +67,118 @@ if os.path.exists(RUTA_RUTAS):
     )
 
     ruta = df.loc[index_sel]
-
-    # =====================
-    # 📊 Ingresos y Utilidades
-    # =====================
+    
+    # Campos simulables
     st.markdown("---")
-    st.subheader("📊 Ingresos y Utilidades")
+    st.subheader("⚙️ Ajustes para Simulación")
+    costo_diesel_input = st.number_input("Costo del Diesel ($/L)", value=float(valores.get("Costo Diesel", 24.0)))
+    rendimiento_input = st.number_input("Rendimiento Camión (km/L)", value=float(valores.get("Rendimiento Camion", 2.65)))
 
-    ingreso_total = safe_number(ruta["Ingreso Total"])
-    costo_total = safe_number(ruta["Costo_Total_Ruta"])
-    utilidad_bruta = ingreso_total - costo_total
-    costos_indirectos = ingreso_total * 0.35
-    utilidad_neta = utilidad_bruta - costos_indirectos
-    porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
-    porcentaje_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
 
-    def colored_bold(label, value, condition, threshold=0):
-        color = "green" if condition else "red"
-        return f"<strong>{label}:</strong> <span style='color:{color}; font-weight:bold'>{value}</span>"
+    if st.button("🔁 Simular"):
+        st.session_state["simular"] = True
 
-    st.write(f"**Ingreso Total:** ${ingreso_total:,.2f}")
-    st.write(f"**Costo Total:** ${costo_total:,.2f}")
-    st.markdown(colored_bold("Utilidad Bruta", f"${utilidad_bruta:,.2f}", utilidad_bruta >= 0), unsafe_allow_html=True)
-    st.markdown(colored_bold("% Utilidad Bruta", f"{porcentaje_bruta:.2f}%", porcentaje_bruta >= 50), unsafe_allow_html=True)
-    st.write(f"**Costos Indirectos (35%):** ${costos_indirectos:,.2f}")
-    st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
-    st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
+    # Mostrar resultados simulados si está activo
+    if st.session_state.get("simular", False):
+        ingreso_total = safe_number(ruta["Ingreso Total"])
+        costo_diesel_camion = (safe_number(ruta["KM"]) / rendimiento_input) * costo_diesel_input
+        costo_diesel_termo = safe_number(ruta["Horas_Termo"]) * float(valores.get("Rendimiento Termo", 3.0)) * costo_diesel_input
 
+        costo_total = (
+            costo_diesel_camion +
+            costo_diesel_termo +
+            safe_number(ruta["Sueldo_Operador"]) +
+            safe_number(ruta["Bono"]) +
+            safe_number(ruta["Casetas"]) +
+            safe_number(ruta["Costo Cruce Convertido"]) +
+            safe_number(ruta["Costo_Extras"])
+        )
+
+        utilidad_bruta = ingreso_total - costo_total
+        costos_indirectos = ingreso_total * 0.35
+        utilidad_neta = utilidad_bruta - costos_indirectos
+        porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        porcentaje_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+
+        st.success("🔧 Estás viendo una simulación. Los valores han sido ajustados con los parámetros ingresados.")
+        mostrar_resultados(ingreso_total, costo_total, utilidad_bruta, costos_indirectos, utilidad_neta, porcentaje_bruta, porcentaje_neta)
+
+        # Botón para volver a valores reales
+        if st.button("🔄 Volver a valores reales"):
+            st.session_state["simular"] = False
+            st.experimental_rerun()
+
+    # Mostrar resultados reales por defecto
+    else:
+        ingreso_total = safe_number(ruta["Ingreso Total"])
+        costo_total = safe_number(ruta["Costo_Total_Ruta"])
+        utilidad_bruta = ingreso_total - costo_total
+        costos_indirectos = ingreso_total * 0.35
+        utilidad_neta = utilidad_bruta - costos_indirectos
+        porcentaje_bruta = (utilidad_bruta / ingreso_total * 100) if ingreso_total > 0 else 0
+        porcentaje_neta = (utilidad_neta / ingreso_total * 100) if ingreso_total > 0 else 0
+
+        mostrar_resultados(ingreso_total, costo_total, utilidad_bruta, costos_indirectos, utilidad_neta, porcentaje_bruta, porcentaje_neta)
+
+    
     # =====================
     # 📋 Detalles y Costos
     # =====================
     st.markdown("---")
     st.subheader("📋 Detalles y Costos de la Ruta")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.write(f"Fecha: {ruta['Fecha']}")
+        st.write(f"Tipo: {ruta['Tipo']}")
+        st.write(f"Modo: {ruta.get('Modo de Viaje', 'Operado')}")
+        st.write(f"Cliente: {ruta['Cliente']}")
+        st.write(f"Origen → Destino: {ruta['Origen']} → {ruta['Destino']}")
+        st.write(f"KM: {safe_number(ruta['KM']):,.2f}")
+        st.write(f"Rendimiento Camión: {rendimiento_input:.2f}")
+        
+    with col2:
+        st.write(f"Moneda Flete: {ruta['Moneda']}")
+        st.write(f"Ingreso Flete Original: ${safe_number(ruta['Ingreso_Original']):,.2f}")
+        st.write(f"Tipo de cambio: {safe_number(ruta['Tipo de cambio']):,.2f}")
+        st.write(f"Ingreso Flete Convertido: ${safe_number(ruta['Ingreso Flete']):,.2f}")
+        st.write(f"Moneda Cruce: {ruta['Moneda_Cruce']}")
+        st.write(f"Ingreso Cruce Original: ${safe_number(ruta['Cruce_Original']):,.2f}")
+        st.write(f"Tipo cambio Cruce: {safe_number(ruta['Tipo cambio Cruce']):,.2f}")
+        st.write(f"Ingreso Cruce Convertido: ${safe_number(ruta['Ingreso Cruce']):,.2f}")
+        st.write(f"Moneda Costo Cruce: {ruta['Moneda Costo Cruce']}")
+        st.write(f"Costo Cruce Original: ${safe_number(ruta['Costo Cruce']):,.2f}")
+        st.write(f"Costo Cruce Convertido: ${safe_number(ruta['Costo Cruce Convertido']):,.2f}")
+        if st.session_state.get("simular", False):
+            costo_diesel_camion = (safe_number(ruta["KM"]) / rendimiento_input) * costo_diesel_input
+            st.write(f"Diesel Camión (Simulado): ${costo_diesel_camion:,.2f}")
+        else:
+            st.write(f"Diesel Camión: ${safe_number(ruta['Costo_Diesel_Camion']):,.2f}")
+        if st.session_state.get("simular", False):
+            costo_diesel_termo = safe_number(ruta["Horas_Termo"]) * safe_number(ruta["KM"]) * costo_diesel_input
+            st.write(f"Diesel Termo (Simulado): ${costo_diesel_termo:,.2f}")
+        else:
+            st.write(f"Diesel Termo: ${safe_number(ruta['Costo_Diesel_Termo']):,.2f}")
+        st.write(f"Sueldo Operador: ${safe_number(ruta['Sueldo_Operador']):,.2f}")
+        st.write(f"Bono: ${safe_number(ruta['Bono']):,.2f}")
+        st.write(f"Casetas: ${safe_number(ruta['Casetas']):,.2f}")
+        
+    with col3:
+        st.write("**Extras:**")
+        st.write(f"- Lavado Termo: ${safe_number(ruta['Lavado_Termo']):,.2f}")
+        st.write(f"- Movimiento Local: ${safe_number(ruta['Movimiento_Local']):,.2f}")
+        st.write(f"- Puntualidad: ${safe_number(ruta['Puntualidad']):,.2f}")
+        st.write(f"- Pensión: ${safe_number(ruta['Pension']):,.2f}")
+        st.write(f"- Estancia: ${safe_number(ruta['Estancia']):,.2f}")
+        st.write(f"- Fianza Termo: ${safe_number(ruta['Fianza_Termo']):,.2f}")
+        st.write(f"- Renta Termo: ${safe_number(ruta['Renta_Termo']):,.2f}")
+        st.write(f"- Pistas Extra: ${safe_number(ruta.get('Pistas_Extra', 0)):,.2f}")
+        st.write(f"- Stop: ${safe_number(ruta.get('Stop', 0)):,.2f}")
+        st.write(f"- Falso: ${safe_number(ruta.get('Falso', 0)):,.2f}")
+        st.write(f"- Gatas: ${safe_number(ruta.get('Gatas', 0)):,.2f}")
+        st.write(f"- Accesorios: ${safe_number(ruta.get('Accesorios', 0)):,.2f}")
+        st.write(f"- Guías: ${safe_number(ruta.get('Guias', 0)):,.2f}")
 
-    detalles = [
-        f"Fecha: {ruta['Fecha']}",
-        f"Tipo: {ruta['Tipo']}",
-        f"Modo: {ruta.get('Modo', 'Operado')}",
-        f"Cliente: {ruta['Cliente']}",
-        f"Origen → Destino: {ruta['Origen']} → {ruta['Destino']}",
-        f"KM: {safe_number(ruta['KM']):,.2f}",
-        f"Moneda Flete: {ruta['Moneda']}",
-        f"Ingreso Flete Original: ${safe_number(ruta['Ingreso_Original']):,.2f}",
-        f"Tipo de cambio: {safe_number(ruta['Tipo de cambio']):,.2f}",
-        f"Ingreso Flete Convertido: ${safe_number(ruta['Ingreso Flete']):,.2f}",
-        f"Moneda Cruce: {ruta['Moneda_Cruce']}",
-        f"Ingreso Cruce Original: ${safe_number(ruta['Cruce_Original']):,.2f}",
-        f"Tipo cambio Cruce: {safe_number(ruta['Tipo cambio Cruce']):,.2f}",
-        f"Ingreso Cruce Convertido: ${safe_number(ruta['Ingreso Cruce']):,.2f}",
-        f"Moneda Costo Cruce: {ruta['Moneda Costo Cruce']}",
-        f"Costo Cruce Original: ${safe_number(ruta['Costo Cruce']):,.2f}",
-        f"Costo Cruce Convertido: ${safe_number(ruta['Costo Cruce Convertido']):,.2f}",
-        f"Diesel Camión: ${safe_number(ruta['Costo_Diesel_Camion']):,.2f}",
-        f"Diesel Termo: ${safe_number(ruta['Costo_Diesel_Termo']):,.2f}",
-        f"Sueldo Operador: ${safe_number(ruta['Sueldo_Operador']):,.2f}",
-        f"Bono: ${safe_number(ruta['Bono']):,.2f}",
-        f"Casetas: ${safe_number(ruta['Casetas']):,.2f}",
-        "**Extras:**",
-        f"- Lavado Termo: ${safe_number(ruta['Lavado_Termo']):,.2f}",
-        f"- Movimiento Local: ${safe_number(ruta['Movimiento_Local']):,.2f}",
-        f"- Puntualidad: ${safe_number(ruta['Puntualidad']):,.2f}",
-        f"- Pensión: ${safe_number(ruta['Pension']):,.2f}",
-        f"- Estancia: ${safe_number(ruta['Estancia']):,.2f}",
-        f"- Fianza Termo: ${safe_number(ruta['Fianza_Termo']):,.2f}",
-        f"- Renta Termo: ${safe_number(ruta['Renta_Termo']):,.2f}",
-        f"- Pistas Extra: ${safe_number(ruta.get('Pistas_Extra', 0)):,.2f}",
-        f"- Stop: ${safe_number(ruta.get('Stop', 0)):,.2f}",
-        f"- Falso: ${safe_number(ruta.get('Falso', 0)):,.2f}",
-        f"- Gatas: ${safe_number(ruta.get('Gatas', 0)):,.2f}",
-        f"- Accesorios: ${safe_number(ruta.get('Accesorios', 0)):,.2f}",
-        f"- Guías: ${safe_number(ruta.get('Guias', 0)):,.2f}"
-    ]
-
-    for line in detalles:
-        st.write(line)
 else:
     st.warning("⚠️ No hay rutas guardadas todavía.")
