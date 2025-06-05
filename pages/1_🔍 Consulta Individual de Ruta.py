@@ -1,38 +1,21 @@
 import streamlit as st
 import pandas as pd
-from supabase import create_client
 import os
 
-# ✅ Conexión a Supabase
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_KEY"]
-supabase = create_client(url, key)
-
-# ✅ Ruta para valores locales
+# Ruta y valores por defecto
 RUTA_DATOS = "datos_generales.csv"
-
-# ✅ Valores por defecto
+RUTA_RUTAS = "rutas_guardadas.csv"
 valores_por_defecto = {
     "Rendimiento Camion": 2.5,
     "Costo Diesel": 24.0,
 }
 
-# ✅ Cargar valores desde CSV o usar los por defecto
+# Cargar valores desde CSV o usar los por defecto
 if os.path.exists(RUTA_DATOS):
     df_datos = pd.read_csv(RUTA_DATOS).set_index("Parametro")["Valor"].to_dict()
     valores = {**valores_por_defecto, **df_datos}
 else:
     valores = valores_por_defecto.copy()
-
-# ✅ Cargar rutas desde Supabase
-respuesta = supabase.table("rutas_guardadas").select("*").execute()
-df = pd.DataFrame(respuesta.data)
-
-# ✅ Asegurar formato correcto
-if not df.empty:
-    df["Fecha"] = pd.to_datetime(df["Fecha"]).dt.strftime("%Y-%m-%d")
-    df["Ingreso Total"] = pd.to_numeric(df["Ingreso Total"], errors="coerce").fillna(0)
-    df["Costo_Total_Ruta"] = pd.to_numeric(df["Costo_Total_Ruta"], errors="coerce").fillna(0)
 
 st.title("🔍 Consulta Individual de Ruta")
 
@@ -55,9 +38,8 @@ def mostrar_resultados(ingreso_total, costo_total, utilidad_bruta, costos_indire
     st.markdown(colored_bold("Utilidad Neta", f"${utilidad_neta:,.2f}", utilidad_neta >= 0), unsafe_allow_html=True)
     st.markdown(colored_bold("% Utilidad Neta", f"{porcentaje_neta:.2f}%", porcentaje_neta >= 15), unsafe_allow_html=True)
     
-if df.empty:
-    st.warning("⚠️ No hay rutas guardadas todavía.")
-    st.stop()
+if os.path.exists(RUTA_RUTAS):
+    df = pd.read_csv(RUTA_RUTAS)
 
     st.subheader("📌 Selecciona Tipo de Ruta")
     tipo_sel = st.selectbox("Tipo", ["IMPO", "EXPO", "VACIO"])
